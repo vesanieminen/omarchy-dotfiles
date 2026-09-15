@@ -63,6 +63,12 @@ This gives a 2560x1440 external display `1x` scaling and the MacBook Pro's
 3456x2160 Retina display `2x` scaling. A user path unit reapplies the policy
 whenever SPICE writes a new display state.
 
+## Input policy
+
+Natural scrolling is enabled at Hyprland's global pointer level. QEMU/SPICE
+exposes the Mac trackpad to the VM as emulated pointer devices, not as a
+libinput touchpad, so settings under `input.touchpad` do not apply to it.
+
 ## Updating the snapshot
 
 After installing or removing packages:

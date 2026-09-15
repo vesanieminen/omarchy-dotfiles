@@ -55,3 +55,11 @@
 -- Enable touchpad gestures for moving focus (helpful on scrolling layout).
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
+
+-- The Mac trackpad is exposed to this VM as QEMU/SPICE pointer devices rather
+-- than a libinput touchpad, so this must be a global pointer setting.
+hl.config({
+  input = {
+    natural_scroll = true,
+  },
+})
