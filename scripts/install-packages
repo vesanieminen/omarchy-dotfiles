@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+explicit_file="${repo_dir}/packages/explicit.txt"
+foreign_file="${repo_dir}/packages/foreign.txt"
+
+[[ -r ${explicit_file} ]] || {
+  printf 'Missing explicit package inventory: %s\n' "${explicit_file}" >&2
+  exit 1
+}
+
+mapfile -t repository_packages < <(
+  if [[ -s ${foreign_file} ]]; then
+    comm -23 "${explicit_file}" "${foreign_file}"
+  else
+    cat "${explicit_file}"
+  fi
+)
+
+if ((${#repository_packages[@]} > 0)); then
+  omarchy pkg add "${repository_packages[@]}"
+fi
+
+if [[ -s ${foreign_file} ]]; then
+  mapfile -t foreign_packages <"${foreign_file}"
+  omarchy pkg aur add "${foreign_packages[@]}"
+fi

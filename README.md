@@ -15,7 +15,7 @@ cd ~/dotfiles
 
 The bootstrap script:
 
-1. installs GNU Stow through Omarchy's package helper;
+1. restores the tracked explicit package set through Omarchy's package helpers;
 2. backs up a conflicting stock `~/.config/hypr/monitors.lua`;
 3. links the `desktop` package into the home directory;
 4. enables resolution-aware SPICE display scaling;
@@ -28,6 +28,7 @@ The bootstrap script:
 - `packages/all-with-versions.txt` — complete package snapshot for auditing.
 - `packages/foreign.txt` — packages outside the configured sync databases.
 - `scripts/snapshot-packages` — refreshes the package snapshots.
+- `scripts/install-packages` — restores the tracked explicit package set.
 - `docs/commands.md` — reproducible commands and maintenance workflow.
 
 ## Monitor policy
@@ -53,3 +54,8 @@ cd ~/dotfiles
 git add packages
 git commit -m "Update package snapshot"
 ```
+
+`packages/all-with-versions.txt` records the exact observed versions for
+auditing. Arch is rolling-release, so restoration installs the currently
+available versions of the explicitly tracked packages rather than attempting
+unsafe downgrades to historical package builds.

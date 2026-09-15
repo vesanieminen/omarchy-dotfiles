@@ -15,7 +15,7 @@ cd ~/dotfiles
 operations are:
 
 ```bash
-omarchy pkg add stow
+"$HOME/dotfiles/scripts/install-packages"
 stow --dir="$HOME/dotfiles" --target="$HOME" --restow desktop
 systemctl --user daemon-reload
 systemctl --user enable --now spice-display-scale.path
@@ -33,8 +33,9 @@ cd ~/dotfiles
 ```
 
 The versioned complete package list is an audit snapshot. On a fresh Omarchy
-installation, prefer reinstalling intentional additions through `omarchy pkg
-add` instead of attempting to downgrade every package to historical versions.
+installation, `bootstrap` restores explicitly installed repository packages
+through Omarchy's package helpers. It does not attempt to downgrade packages
+to the historical versions in the audit snapshot.
 
 ## Remove the desktop links
 
