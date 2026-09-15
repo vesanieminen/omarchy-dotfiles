@@ -41,8 +41,7 @@ backup_unmanaged_file .local/bin/gh
 stow --dir="${repo_dir}" --target="${HOME}" --restow desktop
 
 systemctl --user daemon-reload
-systemctl --user enable --now spice-display-scale.path
-systemctl --user start spice-display-scale.service
+systemctl --user enable --now spice-display-scale.path spice-display-scale.service
 systemctl --user set-environment GDK_SCALE=1
 
 hyprctl reload

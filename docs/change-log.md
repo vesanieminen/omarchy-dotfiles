@@ -148,3 +148,9 @@ to recreating the machine; reproducible provisioning commands live in
     single-scale block at every graphical login. Extended the tracked scale
     helper to restore that link after bootstrap and validate the Hyprland
     configuration before applying the per-resolution policy.
+25. A reboot test showed that SPICE can reuse an unchanged persisted display
+    state, so `PathChanged=` alone does not guarantee a scale-policy run at
+    login. Enabled `spice-display-scale.service` as a dependent of
+    `spice-display-bridge.service`, with the existing ordering constraint
+    keeping it after the bridge starts. The path watcher remains enabled for
+    subsequent display-state changes.

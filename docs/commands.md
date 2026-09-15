@@ -18,8 +18,7 @@ operations are:
 "$HOME/dotfiles/scripts/install-packages"
 stow --dir="$HOME/dotfiles" --target="$HOME" --restow desktop
 systemctl --user daemon-reload
-systemctl --user enable --now spice-display-scale.path
-systemctl --user start spice-display-scale.service
+systemctl --user enable --now spice-display-scale.path spice-display-scale.service
 systemctl --user set-environment GDK_SCALE=1
 hyprctl reload
 hyprctl configerrors
@@ -40,7 +39,7 @@ to the historical versions in the audit snapshot.
 ## Remove the desktop links
 
 ```bash
-systemctl --user disable --now spice-display-scale.path
+systemctl --user disable --now spice-display-scale.path spice-display-scale.service
 stow --dir="$HOME/dotfiles" --target="$HOME" --delete desktop
 ```
 
