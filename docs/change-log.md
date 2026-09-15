@@ -84,3 +84,8 @@ to recreating the machine; reproducible provisioning commands live in
 16. Verified that `command -v gh` selects the tracked wrapper and that
     `gh auth status` succeeds using `GH_TOKEN`. Neither the account name nor
     token output is recorded here.
+17. Found that terminals launched during the existing UWSM session inherited
+    its pre-change PATH before Bash startup. Added the supported per-user UWSM
+    environment override in commit `153f58c` (`Persist user command precedence
+    in UWSM`) and deployed it with `./bootstrap`. It takes effect when UWSM
+    creates the next graphical session, after logout/login or reboot.
