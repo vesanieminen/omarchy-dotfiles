@@ -134,6 +134,7 @@ snapper
 socat
 spice-vdagent
 starship
+stow
 sudo
 sushi
 system-config-printer

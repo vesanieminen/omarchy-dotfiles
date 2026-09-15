@@ -782,6 +782,7 @@ sqlite 3.53.4-1
 sratom 0.6.22-1
 srt 1.5.7-1
 starship 1.26.0-1
+stow 2.4.1-1
 sudo 1.9.17.p2-6
 sushi 50.0-1
 syndication 6.30.0-1
