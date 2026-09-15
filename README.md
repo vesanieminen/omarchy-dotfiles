@@ -24,6 +24,8 @@ The bootstrap script:
 ## Layout
 
 - `desktop/` — files deployed into `$HOME` by Stow.
+- `desktop/.config/hypr/input.lua` — pristine Omarchy user input template,
+  tracked so future personal input overrides are reviewed and reproducible.
 - `packages/explicit.txt` — explicitly installed packages.
 - `packages/all-with-versions.txt` — complete package snapshot for auditing.
 - `packages/foreign.txt` — packages outside the configured sync databases.

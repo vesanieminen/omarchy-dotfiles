@@ -33,6 +33,7 @@ command -v omarchy >/dev/null 2>&1 || {
 "${repo_dir}/scripts/install-packages"
 
 backup_unmanaged_file .config/hypr/monitors.lua
+backup_unmanaged_file .config/hypr/input.lua
 backup_unmanaged_file .bashrc
 backup_unmanaged_file .local/bin/gh
 
