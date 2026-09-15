@@ -89,3 +89,14 @@ to recreating the machine; reproducible provisioning commands live in
     environment override in commit `153f58c` (`Persist user command precedence
     in UWSM`) and deployed it with `./bootstrap`. It takes effect when UWSM
     creates the next graphical session, after logout/login or reboot.
+18. Configured the existing public GitHub repository as `origin` and published
+    `main`. The account-specific URL is intentionally omitted from committed
+    history. Authentication uses the tracked keyring-backed `gh` wrapper as a
+    one-shot Git credential helper rather than modifying global Git config:
+
+    ```bash
+    git remote add origin <existing-public-repository-url>
+    git -c credential.helper= \
+      -c credential.helper='!gh auth git-credential' \
+      push -u origin main
+    ```
