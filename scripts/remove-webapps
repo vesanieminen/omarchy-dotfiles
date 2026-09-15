@@ -4,6 +4,8 @@ set -euo pipefail
 
 readonly web_apps=(
   "Basecamp"
+  "Google Contacts"
+  "Google Maps"
   "Google Messages"
   "Google Photos"
   "HEY"

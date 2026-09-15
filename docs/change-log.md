@@ -162,3 +162,5 @@ to recreating the machine; reproducible provisioning commands live in
     ```bash
     ~/dotfiles/scripts/remove-webapps
     ```
+27. Added Google Contacts and Google Maps to the tracked web-app exclusion list
+    and removed their user-level launchers with the same idempotent script.
