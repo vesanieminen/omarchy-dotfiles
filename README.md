@@ -39,7 +39,9 @@ the desktop keyring and exposes it as `GH_TOKEN` only to the `gh` process. The
 secret itself is never stored in this repository. Follow
 `docs/github-auth.md` once on each machine to populate the keyring. The tracked
 `.bashrc` keeps `~/.local/bin` ahead of Mise-managed tools in both interactive
-terminal shells and non-interactive agent shells.
+terminal shells and non-interactive agent shells. The matching UWSM `env.d`
+override establishes the same order for the entire graphical session after
+login.
 
 ## Monitor policy
 

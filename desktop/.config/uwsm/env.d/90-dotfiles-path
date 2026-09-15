@@ -1,0 +1,8 @@
+# Prefer Stow-managed user commands over Omarchy's Mise shims for all apps
+# launched in the UWSM graphical session. UWSM sources this as shell code.
+path_without_local_bin=":${PATH:-}:"
+path_without_local_bin=${path_without_local_bin//:"$HOME/.local/bin":/:}
+path_without_local_bin=${path_without_local_bin#:}
+path_without_local_bin=${path_without_local_bin%:}
+export PATH="$HOME/.local/bin${path_without_local_bin:+:$path_without_local_bin}"
+unset path_without_local_bin

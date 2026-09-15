@@ -13,6 +13,11 @@ activation. This ensures that the wrapper is selected by both interactive
 terminals and non-interactive agent shells, while the wrapper deliberately
 uses `mise x gh` to invoke the real CLI without recursion.
 
+The tracked `~/.config/uwsm/env.d/90-dotfiles-path` also puts
+`~/.local/bin` first in the graphical session inherited by terminals and other
+UWSM-launched applications. UWSM loads this file on login, so log out and back
+in—or reboot—after deploying it for the first time.
+
 ## Store or replace the token
 
 Run this manually in a terminal so the PAT never passes through an agent or
