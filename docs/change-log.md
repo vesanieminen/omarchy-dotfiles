@@ -127,3 +127,13 @@ to recreating the machine; reproducible provisioning commands live in
     other terminal configurations remain at Omarchy defaults. Applied with
     `./bootstrap`, which replaced the unmanaged Foot config with a Stow-managed
     link while preserving its contents.
+23. Kept the font capture limited to the active Foot terminal. Restored
+    Alacritty and Ghostty to their shipped `9pt` defaults with:
+
+    ```bash
+    omarchy refresh config alacritty/alacritty.toml
+    omarchy refresh config ghostty/config
+    ```
+
+    Both restored files matched their packaged Omarchy sources byte-for-byte
+    and remain outside the Stow package.
