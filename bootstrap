@@ -31,6 +31,7 @@ command -v omarchy >/dev/null 2>&1 || {
 }
 
 "${repo_dir}/scripts/install-packages"
+"${repo_dir}/scripts/remove-webapps"
 
 backup_unmanaged_file .config/hypr/monitors.lua
 backup_unmanaged_file .config/hypr/input.lua

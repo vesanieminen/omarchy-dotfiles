@@ -36,6 +36,7 @@ The bootstrap script:
 - `packages/foreign.txt` — packages outside the configured sync databases.
 - `scripts/snapshot-packages` — refreshes the package snapshots.
 - `scripts/install-packages` — restores the tracked explicit package set.
+- `scripts/remove-webapps` — removes stock web apps excluded from this setup.
 - `docs/commands.md` — reproducible commands and maintenance workflow.
 - `docs/github-auth.md` — keyring-backed GitHub CLI authentication for agents.
 

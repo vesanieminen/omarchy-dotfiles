@@ -16,6 +16,7 @@ operations are:
 
 ```bash
 "$HOME/dotfiles/scripts/install-packages"
+"$HOME/dotfiles/scripts/remove-webapps"
 stow --dir="$HOME/dotfiles" --target="$HOME" --restow desktop
 systemctl --user daemon-reload
 systemctl --user enable --now spice-display-scale.path spice-display-scale.service
@@ -23,6 +24,10 @@ systemctl --user set-environment GDK_SCALE=1
 hyprctl reload
 hyprctl configerrors
 ```
+
+`scripts/remove-webapps` records the stock Omarchy web apps intentionally
+excluded from this machine and removes them idempotently with
+`omarchy webapp remove`.
 
 ## Package inventory
 

@@ -154,3 +154,11 @@ to recreating the machine; reproducible provisioning commands live in
     `spice-display-bridge.service`, with the existing ordering constraint
     keeping it after the bridge starts. The path watcher remains enabled for
     subsequent display-state changes.
+26. Removed the Basecamp, Google Messages, Google Photos, HEY, and Zoom web-app
+    launchers with Omarchy's supported removal command. Added an idempotent
+    tracked script and invoked it from `bootstrap` so the same apps are removed
+    when recreating the machine:
+
+    ```bash
+    ~/dotfiles/scripts/remove-webapps
+    ```
