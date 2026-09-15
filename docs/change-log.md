@@ -70,3 +70,17 @@ to recreating the machine; reproducible provisioning commands live in
     The original live `~/.local/bin/gh` was preserved under
     `~/.local/state/dotfiles/backups/20260915-185717/`, then replaced by the
     Stow-managed link. Hyprland configuration validation succeeded.
+13. Found that Omarchy's Mise activation placed the installed `gh` ahead of
+    `~/.local/bin`, bypassing the tracked wrapper. Captured the untouched
+    Omarchy `.bashrc` in commit `32c3067` (`Capture Omarchy bash startup
+    baseline`).
+14. Added a tracked PATH preference for interactive terminals and
+    non-interactive agent shells in commit `8fb03c8` (`Prefer tracked commands
+    over Mise shims`).
+15. Applied the committed setup again with `./bootstrap`. The original live
+    `.bashrc` was preserved under
+    `~/.local/state/dotfiles/backups/20260915-194943/`, then replaced by the
+    Stow-managed link.
+16. Verified that `command -v gh` selects the tracked wrapper and that
+    `gh auth status` succeeds using `GH_TOKEN`. Neither the account name nor
+    token output is recorded here.
