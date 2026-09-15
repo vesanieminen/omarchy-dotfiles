@@ -13,6 +13,11 @@ cd ~/dotfiles
 ./bootstrap
 ```
 
+GNU Stow is required for deployment. On an existing Omarchy installation,
+`./bootstrap` installs it automatically from the tracked package inventory
+before linking the `desktop` package, so no separate Stow installation step is
+needed.
+
 The bootstrap script:
 
 1. restores the tracked explicit package set through Omarchy's package helpers;
