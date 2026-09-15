@@ -69,6 +69,12 @@ Natural scrolling is enabled at Hyprland's global pointer level. QEMU/SPICE
 exposes the Mac trackpad to the VM as emulated pointer devices, not as a
 libinput touchpad, so settings under `input.touchpad` do not apply to it.
 
+## Terminal font size
+
+The active Foot terminal uses an `11pt` font. Its configuration otherwise
+retains Omarchy's defaults and continues importing the active theme's
+generated colors. Other terminal configurations remain at Omarchy defaults.
+
 ## Updating the snapshot
 
 After installing or removing packages:

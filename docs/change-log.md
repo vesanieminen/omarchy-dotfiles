@@ -122,3 +122,8 @@ to recreating the machine; reproducible provisioning commands live in
     ```
 
     Hyprland reported no errors and an effective value of `true`.
+22. Captured the active Foot terminal's font-size-only override at `11pt`.
+    The tracked file matched its live source byte-for-byte before deployment;
+    other terminal configurations remain at Omarchy defaults. Applied with
+    `./bootstrap`, which replaced the unmanaged Foot config with a Stow-managed
+    link while preserving its contents.
