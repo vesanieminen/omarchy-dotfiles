@@ -106,3 +106,6 @@ to recreating the machine; reproducible provisioning commands live in
     `./bootstrap`; the previous hand-edited file remains recoverable under
     `~/.local/state/dotfiles/backups/20260915-200734/`. Hyprland reloaded and
     validated without configuration errors.
+20. Clarified in commit `bc8b2f5` (`Document automatic Stow installation`)
+    that GNU Stow is a deployment dependency installed automatically by
+    `./bootstrap` from the tracked package inventory.
