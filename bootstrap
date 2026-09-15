@@ -3,8 +3,27 @@
 set -euo pipefail
 
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-monitor_target="${HOME}/.config/hypr/monitors.lua"
-monitor_source="${repo_dir}/desktop/.config/hypr/monitors.lua"
+backup_dir=""
+
+backup_unmanaged_file() {
+  local relative_path=$1
+  local target="${HOME}/${relative_path}"
+  local tracked="${repo_dir}/desktop/${relative_path}"
+
+  [[ -f ${tracked} ]] || {
+    printf 'Missing tracked file: %s\n' "${tracked}" >&2
+    exit 1
+  }
+
+  if [[ -e ${target} && ! -L ${target} ]]; then
+    if [[ -z ${backup_dir} ]]; then
+      backup_dir="${HOME}/.local/state/dotfiles/backups/$(date +%Y%m%d-%H%M%S)"
+    fi
+    mkdir -p -- "$(dirname -- "${backup_dir}/${relative_path}")"
+    mv -- "${target}" "${backup_dir}/${relative_path}"
+    printf 'Backed up %s under %s\n' "${target}" "${backup_dir}"
+  fi
+}
 
 command -v omarchy >/dev/null 2>&1 || {
   printf 'Omarchy is required before running this bootstrap.\n' >&2
@@ -13,17 +32,8 @@ command -v omarchy >/dev/null 2>&1 || {
 
 "${repo_dir}/scripts/install-packages"
 
-if [[ -e ${monitor_target} && ! -L ${monitor_target} ]]; then
-  backup_dir="${HOME}/.local/state/dotfiles/backups/$(date +%Y%m%d-%H%M%S)"
-  mkdir -p -- "${backup_dir}/.config/hypr"
-  mv -- "${monitor_target}" "${backup_dir}/.config/hypr/monitors.lua"
-  printf 'Backed up the previous monitors.lua under %s\n' "${backup_dir}"
-fi
-
-[[ -f ${monitor_source} ]] || {
-  printf 'Missing tracked monitor configuration: %s\n' "${monitor_source}" >&2
-  exit 1
-}
+backup_unmanaged_file .config/hypr/monitors.lua
+backup_unmanaged_file .local/bin/gh
 
 stow --dir="${repo_dir}" --target="${HOME}" --restow desktop
 

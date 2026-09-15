@@ -1,4 +1,31 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ -z ${GH_TOKEN:-} ]]; then
+  keyring_user=$(id -un)
+
+  command -v secret-tool >/dev/null 2>&1 || {
+    printf 'secret-tool is required to retrieve the GitHub token.\n' >&2
+    exit 1
+  }
+
+  GH_TOKEN=$(
+    secret-tool lookup \
+      service github-cli \
+      host github.com \
+      user "${keyring_user}" || true
+  )
+
+  [[ -n ${GH_TOKEN} ]] || {
+    printf 'No GitHub token was found in the desktop keyring.\n' >&2
+    printf 'See ~/dotfiles/docs/github-auth.md for setup instructions.\n' >&2
+    exit 1
+  }
+
+  export GH_TOKEN
+fi
+
 export MISE_MINIMUM_RELEASE_AGE=0
-mise use -g --quiet "gh" || exit 1
-exec mise x "gh" -- "gh" "$@"
+mise use -g --quiet gh
+exec mise x gh -- gh "$@"

@@ -46,3 +46,9 @@ stow --dir="$HOME/dotfiles" --target="$HOME" --delete desktop
 
 This removes only Stow-managed links. Backups made by `bootstrap` remain under
 `~/.local/state/dotfiles/backups/`.
+
+## GitHub authentication
+
+Store the fine-grained PAT once using the commands in `docs/github-auth.md`.
+After that, both humans and approved local agents can use the normal `gh`
+command. The tracked wrapper retrieves the token without printing it.

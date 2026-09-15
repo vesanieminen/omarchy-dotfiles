@@ -16,7 +16,7 @@ cd ~/dotfiles
 The bootstrap script:
 
 1. restores the tracked explicit package set through Omarchy's package helpers;
-2. backs up a conflicting stock `~/.config/hypr/monitors.lua`;
+2. backs up conflicting stock files that the repository will manage;
 3. links the `desktop` package into the home directory;
 4. enables resolution-aware SPICE display scaling;
 5. reloads and validates Hyprland.
@@ -30,6 +30,14 @@ The bootstrap script:
 - `scripts/snapshot-packages` — refreshes the package snapshots.
 - `scripts/install-packages` — restores the tracked explicit package set.
 - `docs/commands.md` — reproducible commands and maintenance workflow.
+- `docs/github-auth.md` — keyring-backed GitHub CLI authentication for agents.
+
+## GitHub authentication for agents
+
+The tracked `~/.local/bin/gh` wrapper retrieves a fine-grained GitHub PAT from
+the desktop keyring and exposes it as `GH_TOKEN` only to the `gh` process. The
+secret itself is never stored in this repository. Follow
+`docs/github-auth.md` once on each machine to populate the keyring.
 
 ## Monitor policy
 
