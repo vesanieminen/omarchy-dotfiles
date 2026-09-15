@@ -1,0 +1,11 @@
+[Unit]
+Description=Watch SPICE display state for scaling changes
+After=spice-display-bridge.service
+PartOf=graphical-session.target
+
+[Path]
+PathChanged=%h/.local/state/spice-guest-tools/display.state
+Unit=spice-display-scale.service
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+state_file="${XDG_STATE_HOME:-${HOME}/.local/state}/spice-guest-tools/display.state"
+[[ -r ${state_file} ]] || exit 0
+
+declare -A outputs=()
+declare -A modelines=()
+declare -A positions_x=()
+declare -A positions_y=()
+
+while IFS='=' read -r key value; do
+  if [[ ${key} =~ ^monitor\.([0-9]+)\.(output|modeline|x|y)$ ]]; then
+    index=${BASH_REMATCH[1]}
+    field=${BASH_REMATCH[2]}
+    case ${field} in
+      output) outputs[${index}]=${value} ;;
+      modeline) modelines[${index}]=${value} ;;
+      x) positions_x[${index}]=${value} ;;
+      y) positions_y[${index}]=${value} ;;
+    esac
+  fi
+done <"${state_file}"
+
+mapfile -t indexes < <(printf '%s\n' "${!outputs[@]}" | sort -n)
+lua_command='do '
+monitor_count=0
+
+for index in "${indexes[@]}"; do
+  output=${outputs[${index}]:-}
+  modeline=${modelines[${index}]:-}
+  position_x=${positions_x[${index}]:-}
+  position_y=${positions_y[${index}]:-}
+
+  [[ ${output} =~ ^[A-Za-z0-9._-]+$ ]] || continue
+  [[ ${modeline} =~ ^[A-Za-z0-9.+[:space:]-]+$ ]] || continue
+  [[ ${position_x} =~ ^-?[0-9]+$ ]] || continue
+  [[ ${position_y} =~ ^-?[0-9]+$ ]] || continue
+
+  read -r width height < <(
+    awk '{ if (NF >= 6) print $2, $6 }' <<<"${modeline}"
+  )
+  [[ ${width} =~ ^[0-9]+$ && ${height} =~ ^[0-9]+$ ]] || continue
+
+  scale=1
+  if ((height >= 1800)); then
+    scale=2
+  fi
+
+  printf -v lua_command \
+    '%shl.monitor({ output = "%s", mode = "modeline %s", position = "%sx%s", scale = %s }); ' \
+    "${lua_command}" "${output}" "${modeline}" "${position_x}" "${position_y}" "${scale}"
+  monitor_count=$((monitor_count + 1))
+done
+
+((monitor_count > 0)) || exit 0
+lua_command+='end'
+
+hyprctl -r eval "${lua_command}"

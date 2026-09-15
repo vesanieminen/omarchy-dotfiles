@@ -1,8 +1,24 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 -- List current monitors and supported resolutions with: hyprctl monitors all
 
-local omarchy_gdk_scale = 2
-local omarchy_monitor_scale = "auto"
+-- Virtio exposes a made-up physical size, so Hyprland's PPI-based "auto"
+-- scaling cannot distinguish a normal external display from a Retina display.
+-- Use integer scaling based on the pixel height sent by the SPICE host:
+-- 1440p and below stays 1x; Retina/4K/5K modes use 2x.
+local omarchy_gdk_scale = 1
+local omarchy_monitor_scale = 1
+
+local function omarchy_monitor_scale_for_modeline(modeline)
+  local _, height = modeline:match(
+    "^%S+%s+(%d+)%s+%d+%s+%d+%s+%d+%s+(%d+)"
+  )
+
+  if tonumber(height) and tonumber(height) >= 1800 then
+    return 2
+  end
+
+  return 1
+end
 
 hl.env("GDK_SCALE", tostring(omarchy_gdk_scale))
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = omarchy_monitor_scale })
@@ -78,7 +94,7 @@ do
           output = output,
           mode = "modeline " .. modeline,
           position = position,
-          scale = omarchy_monitor_scale,
+          scale = omarchy_monitor_scale_for_modeline(modeline),
         }
         hl.monitor(config)
       end

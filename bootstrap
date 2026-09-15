@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+monitor_target="${HOME}/.config/hypr/monitors.lua"
+monitor_source="${repo_dir}/desktop/.config/hypr/monitors.lua"
+
+command -v omarchy >/dev/null 2>&1 || {
+  printf 'Omarchy is required before running this bootstrap.\n' >&2
+  exit 1
+}
+
+omarchy pkg add stow
+
+if [[ -e ${monitor_target} && ! -L ${monitor_target} ]]; then
+  backup_dir="${HOME}/.local/state/dotfiles/backups/$(date +%Y%m%d-%H%M%S)"
+  mkdir -p -- "${backup_dir}/.config/hypr"
+  mv -- "${monitor_target}" "${backup_dir}/.config/hypr/monitors.lua"
+  printf 'Backed up the previous monitors.lua under %s\n' "${backup_dir}"
+fi
+
+[[ -f ${monitor_source} ]] || {
+  printf 'Missing tracked monitor configuration: %s\n' "${monitor_source}" >&2
+  exit 1
+}
+
+stow --dir="${repo_dir}" --target="${HOME}" --restow desktop
+
+systemctl --user daemon-reload
+systemctl --user enable --now spice-display-scale.path
+systemctl --user start spice-display-scale.service
+systemctl --user set-environment GDK_SCALE=1
+
+hyprctl reload
+config_errors=$(hyprctl configerrors)
+if [[ -n ${config_errors} ]]; then
+  printf '%s\n' "${config_errors}" >&2
+  exit 1
+fi
+
+printf 'Dotfiles applied and Hyprland configuration validated.\n'

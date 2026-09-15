@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+
+pacman -Qqe | LC_ALL=C sort >"${repo_dir}/packages/explicit.txt"
+{ pacman -Qqem || true; } | LC_ALL=C sort >"${repo_dir}/packages/foreign.txt"
+pacman -Q | LC_ALL=C sort >"${repo_dir}/packages/all-with-versions.txt"
+omarchy version >"${repo_dir}/packages/omarchy-version.txt"
+
+printf 'Package snapshots updated in %s/packages\n' "${repo_dir}"
