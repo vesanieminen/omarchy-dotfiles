@@ -109,3 +109,16 @@ to recreating the machine; reproducible provisioning commands live in
 20. Clarified in commit `bc8b2f5` (`Document automatic Stow installation`)
     that GNU Stow is a deployment dependency installed automatically by
     `./bootstrap` from the tracked package inventory.
+21. Enabled global Hyprland natural scrolling for the QEMU/SPICE pointer
+    devices in commit `072b253` (`Enable natural scrolling for VM pointers`).
+    The change was prepared and committed in a temporary Git worktree before
+    `main` was fast-forwarded, ensuring the Stow-linked live file changed only
+    after the commit existed. Applied and verified with:
+
+    ```bash
+    hyprctl reload
+    hyprctl configerrors
+    hyprctl getoption input:natural_scroll
+    ```
+
+    Hyprland reported no errors and an effective value of `true`.
