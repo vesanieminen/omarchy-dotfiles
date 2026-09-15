@@ -2,8 +2,26 @@
 
 set -euo pipefail
 
+script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
+desktop_root=$(cd -- "$(dirname -- "${script_path}")/../.." && pwd)
+tracked_monitors="${desktop_root}/.config/hypr/monitors.lua"
+live_monitors="${XDG_CONFIG_HOME:-${HOME}/.config}/hypr/monitors.lua"
 state_file="${XDG_STATE_HOME:-${HOME}/.local/state}/spice-guest-tools/display.state"
 [[ -r ${state_file} ]] || exit 0
+
+# The packaged SPICE bootstrap replaces monitors.lua, including a Stow link,
+# when it refreshes its managed block at graphical login. Restore the tracked
+# per-resolution policy after bootstrap has produced the current display state.
+if [[ $(readlink -f -- "${live_monitors}") != "${tracked_monitors}" ]]; then
+  ln -sfnT -- "${tracked_monitors}" "${live_monitors}"
+  hyprctl reload
+
+  config_errors=$(hyprctl configerrors)
+  if [[ -n ${config_errors} ]]; then
+    printf '%s\n' "${config_errors}" >&2
+    exit 1
+  fi
+fi
 
 declare -A outputs=()
 declare -A modelines=()

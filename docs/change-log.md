@@ -137,3 +137,14 @@ to recreating the machine; reproducible provisioning commands live in
 
     Both restored files matched their packaged Omarchy sources byte-for-byte
     and remain outside the Stow package.
+24. Fixed the SPICE scaling policy failing after reboot. The user systemd
+    transaction had an ordering cycle because the watcher was wanted by
+    `graphical-session.target` but ordered after `spice-display-bridge`, while
+    the bridge itself starts after the graphical target. Removed the watcher's
+    `After=spice-display-bridge.service` constraint so it can begin watching
+    before the bridge writes display state. The triggered scale service remains
+    ordered after the bridge. Also found that the packaged SPICE bootstrap
+    replaces the Stow-managed `monitors.lua` link with its generated
+    single-scale block at every graphical login. Extended the tracked scale
+    helper to restore that link after bootstrap and validate the Hyprland
+    configuration before applying the per-resolution policy.

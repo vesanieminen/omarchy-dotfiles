@@ -1,6 +1,5 @@
 [Unit]
 Description=Watch SPICE display state for scaling changes
-After=spice-display-bridge.service
 PartOf=graphical-session.target
 
 [Path]
