@@ -8,6 +8,11 @@ The tracked `~/.local/bin/gh` wrapper looks up the PAT and exports `GH_TOKEN`
 only for the lifetime of the real GitHub CLI process. It then delegates to
 Omarchy's original Mise-based `gh` launcher behavior.
 
+The tracked `~/.bashrc` gives `~/.local/bin` precedence after Omarchy's Mise
+activation. This ensures that the wrapper is selected by both interactive
+terminals and non-interactive agent shells, while the wrapper deliberately
+uses `mise x gh` to invoke the real CLI without recursion.
+
 ## Store or replace the token
 
 Run this manually in a terminal so the PAT never passes through an agent or

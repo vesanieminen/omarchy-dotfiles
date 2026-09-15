@@ -37,7 +37,9 @@ The bootstrap script:
 The tracked `~/.local/bin/gh` wrapper retrieves a fine-grained GitHub PAT from
 the desktop keyring and exposes it as `GH_TOKEN` only to the `gh` process. The
 secret itself is never stored in this repository. Follow
-`docs/github-auth.md` once on each machine to populate the keyring.
+`docs/github-auth.md` once on each machine to populate the keyring. The tracked
+`.bashrc` keeps `~/.local/bin` ahead of Mise-managed tools in both interactive
+terminal shells and non-interactive agent shells.
 
 ## Monitor policy
 
