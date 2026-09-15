@@ -55,3 +55,18 @@ to recreating the machine; reproducible provisioning commands live in
 9. Verified the live state: `Virtual-1` was 3456x2160 at scale 2, the path
    watcher was enabled and active, all deployed files resolved into this
    repository, and `hyprctl configerrors` returned no errors.
+10. Captured Omarchy's original Mise-based `gh` launcher unchanged in commit
+    `ea0412a` (`Capture Omarchy gh launcher baseline`).
+11. Added the keyring-backed `GH_TOKEN` wrapper, its bootstrap handling, and
+    authentication documentation in commit `c8a725b` (`Add keyring-backed
+    GitHub CLI for agents`). The PAT itself is intentionally not tracked.
+12. Applied the committed setup again:
+
+    ```bash
+    cd ~/dotfiles
+    ./bootstrap
+    ```
+
+    The original live `~/.local/bin/gh` was preserved under
+    `~/.local/state/dotfiles/backups/20260915-185717/`, then replaced by the
+    Stow-managed link. Hyprland configuration validation succeeded.
