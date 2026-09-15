@@ -100,3 +100,9 @@ to recreating the machine; reproducible provisioning commands live in
       -c credential.helper='!gh auth git-credential' \
       push -u origin main
     ```
+19. Restored `~/.config/hypr/input.lua` to Omarchy's fully commented user
+    template and added that pristine template to the Stow package in commit
+    `9a7cd6f` (`Track pristine Omarchy input configuration`). Applied it with
+    `./bootstrap`; the previous hand-edited file remains recoverable under
+    `~/.local/state/dotfiles/backups/20260915-200734/`. Hyprland reloaded and
+    validated without configuration errors.
