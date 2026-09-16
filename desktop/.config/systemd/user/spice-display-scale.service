@@ -2,6 +2,7 @@
 Description=Apply resolution-aware scaling to SPICE displays
 After=spice-display-bridge.service
 PartOf=graphical-session.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=oneshot

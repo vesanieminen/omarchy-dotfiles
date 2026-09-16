@@ -164,3 +164,9 @@ to recreating the machine; reproducible provisioning commands live in
     ```
 27. Added Google Contacts and Google Maps to the tracked web-app exclusion list
     and removed their user-level launchers with the same idempotent script.
+28. Fixed scaling after host sleep. Resume emitted a burst of seven SPICE
+    layouts in roughly 300 milliseconds; repeated watcher activations hit
+    systemd's service start limit before the final Retina layout, leaving both
+    the service and path unit failed at `1x`. Added a 500-millisecond debounce
+    before reading display state and disabled start limiting for the idempotent
+    scale service so the settled final layout is always applied.

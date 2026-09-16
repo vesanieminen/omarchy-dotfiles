@@ -9,6 +9,11 @@ live_monitors="${XDG_CONFIG_HOME:-${HOME}/.config}/hypr/monitors.lua"
 state_file="${XDG_STATE_HOME:-${HOME}/.local/state}/spice-guest-tools/display.state"
 [[ -r ${state_file} ]] || exit 0
 
+# Resume and host-display transitions can emit several intermediate layouts in
+# a few hundred milliseconds. Let the burst settle before applying its final
+# state so an intermediate low-resolution mode does not choose the final scale.
+sleep 0.5
+
 # The packaged SPICE bootstrap replaces monitors.lua, including a Stow link,
 # when it refreshes its managed block at graphical login. Restore the tracked
 # per-resolution policy after bootstrap has produced the current display state.
