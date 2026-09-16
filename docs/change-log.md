@@ -170,3 +170,15 @@ to recreating the machine; reproducible provisioning commands live in
     the service and path unit failed at `1x`. Added a 500-millisecond debounce
     before reading display state and disabled start limiting for the idempotent
     scale service so the settled final layout is always applied.
+
+## 2026-09-16
+
+1. Simplified `spice-display-scale` so unchanged scales are a no-op and a
+   superseded SPICE state is never applied. The helper updates a monitor only
+   when it crosses the 1800-pixel threshold: `1x` below it and `2x` at or above
+   it. This preserves automatic scaling after login, sleep/wake, and host
+   display changes without reapplying every layout.
+2. Verified both final transitions: 2560x1440 resolves to `1x` and 3456x2160
+   resolves to `2x`. Repeating the helper at the correct scale performs no
+   update. The packaged SPICE bridge and scaling path watcher remain active,
+   and Hyprland reports no configuration errors.

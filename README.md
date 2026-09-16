@@ -53,16 +53,15 @@ login.
 
 ## Monitor policy
 
-SPICE owns the virtual monitor resolution and layout. Virtio supplies a fake
-physical display size, so Hyprland cannot infer DPI correctly. The personal
-policy uses integer scaling based on each virtual display's pixel height:
+SPICE owns virtual monitor resolution and layout. Virtio exposes the same fake
+physical dimensions at every host resolution, so Hyprland's native `auto`
+policy chooses fractional scaling at 2560x1440. The personal policy instead
+uses `1x` below 1800 pixels high and `2x` at or above 1800 pixels.
 
-- below 1800 pixels high: `1x`;
-- 1800 pixels high or above: `2x`.
-
-This gives a 2560x1440 external display `1x` scaling and the MacBook Pro's
-3456x2160 Retina display `2x` scaling. A user path unit reapplies the policy
-whenever SPICE writes a new display state.
+A debounced path service checks each settled SPICE display state after login,
+sleep/wake, and host-display changes. It skips outputs already at the desired
+scale and applies a monitor update only when crossing the 1x/2x threshold. This
+keeps the packaged SPICE bridge responsible for every normal layout update.
 
 ## Input policy
 

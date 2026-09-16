@@ -2,31 +2,14 @@
 
 set -euo pipefail
 
-script_path=$(readlink -f -- "${BASH_SOURCE[0]}")
-desktop_root=$(cd -- "$(dirname -- "${script_path}")/../.." && pwd)
-tracked_monitors="${desktop_root}/.config/hypr/monitors.lua"
-live_monitors="${XDG_CONFIG_HOME:-${HOME}/.config}/hypr/monitors.lua"
-state_file="${XDG_STATE_HOME:-${HOME}/.local/state}/spice-guest-tools/display.state"
+state_file=${SPICE_DISPLAY_STATE:-${XDG_STATE_HOME:-${HOME}/.local/state}/spice-guest-tools/display.state}
 [[ -r ${state_file} ]] || exit 0
 
 # Resume and host-display transitions can emit several intermediate layouts in
-# a few hundred milliseconds. Let the burst settle before applying its final
-# state so an intermediate low-resolution mode does not choose the final scale.
-sleep 0.5
-
-# The packaged SPICE bootstrap replaces monitors.lua, including a Stow link,
-# when it refreshes its managed block at graphical login. Restore the tracked
-# per-resolution policy after bootstrap has produced the current display state.
-if [[ $(readlink -f -- "${live_monitors}") != "${tracked_monitors}" ]]; then
-  ln -sfnT -- "${tracked_monitors}" "${live_monitors}"
-  hyprctl reload
-
-  config_errors=$(hyprctl configerrors)
-  if [[ -n ${config_errors} ]]; then
-    printf '%s\n' "${config_errors}" >&2
-    exit 1
-  fi
-fi
+# a few hundred milliseconds. Act only on the final state in the burst.
+sleep "${SPICE_SCALE_SETTLE_SECONDS:-0.5}"
+state_contents=$(<"${state_file}")
+monitors_json=$(hyprctl -j monitors all)
 
 declare -A outputs=()
 declare -A modelines=()
@@ -44,11 +27,11 @@ while IFS='=' read -r key value; do
       y) positions_y[${index}]=${value} ;;
     esac
   fi
-done <"${state_file}"
+done <<<"${state_contents}"
 
 mapfile -t indexes < <(printf '%s\n' "${!outputs[@]}" | sort -n)
 lua_command='do '
-monitor_count=0
+change_count=0
 
 for index in "${indexes[@]}"; do
   output=${outputs[${index}]:-}
@@ -61,23 +44,31 @@ for index in "${indexes[@]}"; do
   [[ ${position_x} =~ ^-?[0-9]+$ ]] || continue
   [[ ${position_y} =~ ^-?[0-9]+$ ]] || continue
 
-  read -r width height < <(
-    awk '{ if (NF >= 6) print $2, $6 }' <<<"${modeline}"
-  )
-  [[ ${width} =~ ^[0-9]+$ && ${height} =~ ^[0-9]+$ ]] || continue
+  height=$(awk '{ if (NF >= 6) print $6 }' <<<"${modeline}")
+  [[ ${height} =~ ^[0-9]+$ ]] || continue
 
-  scale=1
+  desired_scale=1
   if ((height >= 1800)); then
-    scale=2
+    desired_scale=2
   fi
+
+  current_scale=$(jq -r --arg output "${output}" \
+    'first(.[] | select(.name == $output) | .scale) // empty' \
+    <<<"${monitors_json}")
+  [[ ${current_scale} =~ ^[0-9]+([.][0-9]+)?$ ]] || continue
+  awk -v current="${current_scale}" -v desired="${desired_scale}" \
+    'BEGIN { exit !(current == desired) }' && continue
 
   printf -v lua_command \
     '%shl.monitor({ output = "%s", mode = "modeline %s", position = "%sx%s", scale = %s }); ' \
-    "${lua_command}" "${output}" "${modeline}" "${position_x}" "${position_y}" "${scale}"
-  monitor_count=$((monitor_count + 1))
+    "${lua_command}" "${output}" "${modeline}" "${position_x}" "${position_y}" "${desired_scale}"
+  change_count=$((change_count + 1))
 done
 
-((monitor_count > 0)) || exit 0
-lua_command+='end'
+((change_count > 0)) || exit 0
 
+# Do not apply a stale layout if another SPICE request arrived while preparing.
+[[ $(<"${state_file}") == "${state_contents}" ]] || exit 0
+
+lua_command+='end'
 hyprctl -r eval "${lua_command}"
