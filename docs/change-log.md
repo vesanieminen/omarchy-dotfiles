@@ -182,3 +182,7 @@ to recreating the machine; reproducible provisioning commands live in
    resolves to `2x`. Repeating the helper at the correct scale performs no
    update. The packaged SPICE bridge and scaling path watcher remain active,
    and Hyprland reports no configuration errors.
+3. Added a Hyprland `config.reloaded` handler that starts the idempotent scale
+   service after every successful configuration reload. This restores the
+   correct scale after a temporary config error even when SPICE display state
+   has not changed.

@@ -87,6 +87,12 @@ do
 end
 -- END spice-guest-tools managed mode
 
+-- A successful config reload reapplies the 1x baseline above without changing
+-- SPICE state. Re-run the resolution-aware policy after the reload completes.
+hl.on("config.reloaded", function()
+  hl.exec_cmd("systemctl --user --no-block start spice-display-scale.service")
+end)
+
 -- Configure a specific monitor.
 -- hl.monitor({ output = "DP-2", mode = "2560x1440@144", position = "0x0", scale = 1 })
 

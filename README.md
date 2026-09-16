@@ -62,6 +62,9 @@ A debounced path service checks each settled SPICE display state after login,
 sleep/wake, and host-display changes. It skips outputs already at the desired
 scale and applies a monitor update only when crossing the 1x/2x threshold. This
 keeps the packaged SPICE bridge responsible for every normal layout update.
+A Hyprland `config.reloaded` handler invokes the same idempotent service, so a
+successful reload also restores the correct scale after a temporary config
+error.
 
 ## Input policy
 
