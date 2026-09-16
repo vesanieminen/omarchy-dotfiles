@@ -65,10 +65,18 @@ for index in "${indexes[@]}"; do
   change_count=$((change_count + 1))
 done
 
-((change_count > 0)) || exit 0
+if ((change_count > 0)); then
+  # Do not apply a stale layout if another SPICE request arrived while preparing.
+  [[ $(<"${state_file}") == "${state_contents}" ]] || exit 0
 
-# Do not apply a stale layout if another SPICE request arrived while preparing.
-[[ $(<"${state_file}") == "${state_contents}" ]] || exit 0
+  lua_command+='end'
+  hyprctl -r eval "${lua_command}"
+fi
 
-lua_command+='end'
-hyprctl -r eval "${lua_command}"
+# Temporary workaround: SPICE can briefly pair an odd-sized mode with scale 2
+# before this post-processing helper runs. Clear only the resulting stale error
+# banner, without reloading Hyprland. Remove this after the bridge applies a
+# compatible mode and scale atomically.
+if [[ -z $(hyprctl configerrors) ]]; then
+  hyprctl seterror disable >/dev/null
+fi

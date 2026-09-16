@@ -64,7 +64,11 @@ scale and applies a monitor update only when crossing the 1x/2x threshold. This
 keeps the packaged SPICE bridge responsible for every normal layout update.
 A Hyprland `config.reloaded` handler invokes the same idempotent service, so a
 successful reload also restores the correct scale after a temporary config
-error.
+error. As a temporary workaround for the packaged bridge briefly applying an
+odd-sized mode at scale `2`, the helper clears a stale Hyprland error string
+with `hyprctl seterror disable`, but only when `hyprctl configerrors` is empty.
+It deliberately does not reload Hyprland. Remove this workaround after the
+bridge guarantees a compatible mode and scale in the same transaction.
 
 ## Input policy
 

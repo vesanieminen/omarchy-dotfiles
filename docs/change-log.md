@@ -189,3 +189,9 @@ to recreating the machine; reproducible provisioning commands live in
 4. Set the global pointer scroll factor to `0.4` for slower Mac-like trackpad
    scrolling. The setting is global because UTM exposes the built-in trackpad
    as QEMU/SPICE mouse devices rather than a multitouch libinput touchpad.
+5. Added a temporary, no-reload cleanup for stale Hyprland scale warnings.
+   After each settled SPICE display event, the helper runs `hyprctl seterror
+   disable` only when `hyprctl configerrors` is empty. This avoids the
+   configuration reload feedback loop while preserving real parsing errors.
+   Remove the cleanup after the SPICE bridge guarantees compatible mode and
+   scale values atomically.
