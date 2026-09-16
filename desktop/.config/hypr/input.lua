@@ -56,10 +56,11 @@
 -- hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl.dsp.focus({ direction = "l" })) end })
 -- hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ direction = "r" })) end })
 
--- The Mac trackpad is exposed to this VM as QEMU/SPICE pointer devices rather
--- than a libinput touchpad, so this must be a global pointer setting.
+-- The Mac trackpad is exposed to this VM as QEMU/SPICE mouse devices rather
+-- than a libinput touchpad, so the effective settings must be global.
 hl.config({
   input = {
     natural_scroll = true,
+    scroll_factor = 0.4,
   },
 })

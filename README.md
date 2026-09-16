@@ -70,7 +70,11 @@ error.
 
 Natural scrolling is enabled at Hyprland's global pointer level. QEMU/SPICE
 exposes the Mac trackpad to the VM as emulated pointer devices, not as a
-libinput touchpad, so settings under `input.touchpad` do not apply to it.
+libinput touchpad, so settings under `input.touchpad` do not apply to it. The
+global scroll factor is `0.4` for slower, more trackpad-like scrolling. UTM does
+not pass finger-count or multitouch contacts to this Linux guest, so clickfinger,
+three-finger drag, tap/drag, palm rejection, and Hyprland touchpad gestures
+cannot be implemented in the guest.
 
 ## Terminal font size
 

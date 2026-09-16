@@ -186,3 +186,6 @@ to recreating the machine; reproducible provisioning commands live in
    service after every successful configuration reload. This restores the
    correct scale after a temporary config error even when SPICE display state
    has not changed.
+4. Set the global pointer scroll factor to `0.4` for slower Mac-like trackpad
+   scrolling. The setting is global because UTM exposes the built-in trackpad
+   as QEMU/SPICE mouse devices rather than a multitouch libinput touchpad.
