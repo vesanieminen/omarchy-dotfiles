@@ -1,6 +1,9 @@
 # Omarchy environment (OMARCHY_PATH + PATH), needed even for non-interactive shells
 [[ -r /usr/share/omarchy/default/bash/env-bootstrap ]] && source /usr/share/omarchy/default/bash/env-bootstrap
 
+# Keep Codex authentication in auth.json instead of the system credential store.
+export CODEX_FORCE_AUTH_JSON=1
+
 prefer_local_bin() {
   local path_without_local_bin=":${PATH:-}:"
   path_without_local_bin=${path_without_local_bin//:"$HOME/.local/bin":/:}

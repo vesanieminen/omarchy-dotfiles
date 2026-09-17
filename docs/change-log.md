@@ -207,3 +207,7 @@ to recreating the machine; reproducible provisioning commands live in
    relative device; avoiding a second libinput acceleration curve produced the
    desired macOS-like pointer feel. Natural scrolling and the global `0.4`
    scroll factor remain unchanged for the emulated pointer devices.
+3. Exported `CODEX_FORCE_AUTH_JSON=1` from the tracked `.bashrc` before the
+   non-interactive-shell guard, making the Codex authentication preference
+   persistent for both terminal and agent Bash sessions without tracking any
+   credentials.

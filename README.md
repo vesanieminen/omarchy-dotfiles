@@ -54,6 +54,13 @@ terminal shells and non-interactive agent shells. The matching UWSM `env.d`
 override establishes the same order for the entire graphical session after
 login.
 
+## Codex authentication
+
+The tracked `.bashrc` exports `CODEX_FORCE_AUTH_JSON=1` before its interactive
+shell guard, making the setting available to terminal and agent Bash sessions.
+The repository records only the behavior flag; it does not contain Codex
+credentials or `auth.json`.
+
 ## Monitor policy
 
 SPICE owns virtual monitor resolution and layout. Virtio exposes the same fake
