@@ -83,6 +83,12 @@ not pass finger-count or multitouch contacts to this Linux guest, so clickfinger
 three-finger drag, tap/drag, palm rejection, and Hyprland touchpad gestures
 cannot be implemented in the guest.
 
+Captured relative pointer movement arrives through `qemu-qemu-usb-mouse` after
+macOS has processed it. That device uses a flat profile at sensitivity `0` so
+libinput does not add a second acceleration curve. UTM's uncaptured absolute
+tablet path bypasses guest pointer acceleration. This preserves the tested
+macOS-like pointer speed and acceleration in both modes.
+
 ## Terminal font size
 
 The active Foot terminal uses an `11pt` font. Its configuration otherwise

@@ -64,3 +64,12 @@ hl.config({
     scroll_factor = 0.4,
   },
 })
+
+-- UTM sends captured pointer movement as macOS-processed relative deltas through
+-- this emulated mouse. Keep the guest response flat so libinput does not add a
+-- second acceleration curve. UTM's absolute tablet path bypasses acceleration.
+hl.device({
+  name = "qemu-qemu-usb-mouse",
+  accel_profile = "flat",
+  sensitivity = 0,
+})

@@ -202,3 +202,8 @@ to recreating the machine; reproducible provisioning commands live in
    shortcut to run Omarchy's supported `omarchy-launch-screensaver force`
    action. It leaves all default bindings intact, including
    Control-Command-Q for Calculator.
+2. Set the emulated `qemu-qemu-usb-mouse` to a flat acceleration profile at
+   sensitivity `0`. UTM forwards captured macOS pointer deltas through this
+   relative device; avoiding a second libinput acceleration curve produced the
+   desired macOS-like pointer feel. Natural scrolling and the global `0.4`
+   scroll factor remain unchanged for the emulated pointer devices.
