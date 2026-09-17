@@ -215,3 +215,10 @@ to recreating the machine; reproducible provisioning commands live in
    to XKB's Finnish Macintosh layout (`fi` with variant `mac`). Kept the stock
    modifier behavior: Left Option remains `ALT` for Omarchy shortcuts and Right
    Option selects the Macintosh symbol layer.
+5. Added a tracked `with-claude-oauth` launcher that retrieves
+   `CLAUDE_CODE_OAUTH_TOKEN` from GNOME Keyring, sets
+   `CLAUDE_FORCE_OAUTH=1`, and exposes both only to a launched Vaadin Bench or
+   Harbor command tree. Local Claude Code remains on its regular subscription
+   login. Added a manual, no-shell-history token provisioning, verification,
+   and rotation guide at `docs/claude-auth.md`; no credential is stored in the
+   repository.

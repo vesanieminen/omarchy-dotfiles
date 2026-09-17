@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if (( $# == 0 )); then
+  printf 'Usage: with-claude-oauth COMMAND [ARGUMENT ...]\n' >&2
+  exit 2
+fi
+
+if [[ -z ${CLAUDE_CODE_OAUTH_TOKEN:-} ]]; then
+  command -v secret-tool >/dev/null 2>&1 || {
+    printf 'secret-tool is required to retrieve the Claude Code token.\n' >&2
+    exit 1
+  }
+
+  CLAUDE_CODE_OAUTH_TOKEN=$(
+    secret-tool lookup \
+      service claude-code \
+      credential oauth-token \
+      user "$(id -un)" || true
+  )
+
+  [[ -n ${CLAUDE_CODE_OAUTH_TOKEN} ]] || {
+    printf 'No Claude Code OAuth token was found in the desktop keyring.\n' >&2
+    printf 'See ~/dotfiles/docs/claude-auth.md for setup instructions.\n' >&2
+    exit 1
+  }
+
+  export CLAUDE_CODE_OAUTH_TOKEN
+fi
+
+export CLAUDE_FORCE_OAUTH=1
+
+exec "$@"

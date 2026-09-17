@@ -42,6 +42,8 @@ The bootstrap script:
 - `scripts/remove-webapps` — removes stock web apps excluded from this setup.
 - `docs/commands.md` — reproducible commands and maintenance workflow.
 - `docs/github-auth.md` — keyring-backed GitHub CLI authentication for agents.
+- `docs/claude-auth.md` — keyring-backed Claude Code OAuth authentication for
+  Harbor runs.
 
 ## GitHub authentication for agents
 
@@ -60,6 +62,16 @@ The tracked `.bashrc` exports `CODEX_FORCE_AUTH_JSON=1` before its interactive
 shell guard, making the setting available to terminal and agent Bash sessions.
 The repository records only the behavior flag; it does not contain Codex
 credentials or `auth.json`.
+
+## Claude Code authentication for Harbor
+
+The tracked `~/.local/bin/with-claude-oauth` launcher retrieves
+`CLAUDE_CODE_OAUTH_TOKEN` from the desktop keyring, sets
+`CLAUDE_FORCE_OAUTH=1`, and exposes both only to the command tree it launches.
+Prefix Vaadin Bench or direct Harbor commands with it so containerized Claude
+Code can authenticate. The normal local `claude` command keeps using its
+regular subscription login. Follow `docs/claude-auth.md` once per machine to
+generate and store the token.
 
 ## Monitor policy
 

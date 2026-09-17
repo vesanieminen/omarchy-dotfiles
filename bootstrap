@@ -39,6 +39,7 @@ backup_unmanaged_file .config/hypr/bindings.lua
 backup_unmanaged_file .config/foot/foot.ini
 backup_unmanaged_file .bashrc
 backup_unmanaged_file .local/bin/gh
+backup_unmanaged_file .local/bin/claude
 
 stow --dir="${repo_dir}" --target="${HOME}" --restow desktop
 
