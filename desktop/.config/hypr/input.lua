@@ -60,6 +60,8 @@
 -- than a libinput touchpad, so the effective settings must be global.
 hl.config({
   input = {
+    kb_layout = "fi",
+    kb_variant = "mac",
     natural_scroll = true,
     scroll_factor = 0.4,
   },

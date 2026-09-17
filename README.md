@@ -109,6 +109,13 @@ Command key as `SUPER`; using the letter `S` avoids Finnish-layout symbol-key
 differences. The combination is otherwise unused, so all Omarchy defaults,
 including Control-Command-Q for Calculator, remain available.
 
+## Keyboard layout
+
+Hyprland uses XKB's Finnish Macintosh layout (`fi` with the `mac` variant) for
+the QEMU keyboard. Command remains `SUPER`, Left Option remains conventional
+`ALT` for Omarchy shortcuts, and Right Option selects the Macintosh symbol
+layer. For example, Right Option-Shift-8 produces `{`.
+
 ## Updating the snapshot
 
 After installing or removing packages:

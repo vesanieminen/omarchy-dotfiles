@@ -211,3 +211,7 @@ to recreating the machine; reproducible provisioning commands live in
    non-interactive-shell guard, making the Codex authentication preference
    persistent for both terminal and agent Bash sessions without tracking any
    credentials.
+4. Changed the Hyprland keyboard mapping from the Windows-style Finnish layout
+   to XKB's Finnish Macintosh layout (`fi` with variant `mac`). Kept the stock
+   modifier behavior: Left Option remains `ALT` for Omarchy shortcuts and Right
+   Option selects the Macintosh symbol layer.
