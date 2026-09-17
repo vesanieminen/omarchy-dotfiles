@@ -31,6 +31,9 @@ The bootstrap script:
 - `desktop/` — files deployed into `$HOME` by Stow.
 - `desktop/.config/hypr/input.lua` — pristine Omarchy user input template,
   tracked so future personal input overrides are reviewed and reproducible.
+- `desktop/.config/hypr/bindings.lua` — personal Hyprland shortcuts, including
+  Control-Command-Shift-S to start the Omarchy screensaver on a Finnish Mac
+  keyboard.
 - `packages/explicit.txt` — explicitly installed packages.
 - `packages/all-with-versions.txt` — complete package snapshot for auditing.
 - `packages/foreign.txt` — packages outside the configured sync databases.
@@ -85,6 +88,13 @@ cannot be implemented in the guest.
 The active Foot terminal uses an `11pt` font. Its configuration otherwise
 retains Omarchy's defaults and continues importing the active theme's
 generated colors. Other terminal configurations remain at Omarchy defaults.
+
+## Keyboard shortcuts
+
+Control-Command-Shift-S starts Omarchy's screensaver. Hyprland reports the Mac
+Command key as `SUPER`; using the letter `S` avoids Finnish-layout symbol-key
+differences. The combination is otherwise unused, so all Omarchy defaults,
+including Control-Command-Q for Calculator, remain available.
 
 ## Updating the snapshot
 

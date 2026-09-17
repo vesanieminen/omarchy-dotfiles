@@ -195,3 +195,10 @@ to recreating the machine; reproducible provisioning commands live in
    configuration reload feedback loop while preserving real parsing errors.
    Remove the cleanup after the SPICE bridge guarantees compatible mode and
    scale values atomically.
+
+## 2026-09-17
+
+1. Added the unused, Finnish-Mac-keyboard-friendly Control-Command-Shift-S
+   shortcut to run Omarchy's supported `omarchy-launch-screensaver force`
+   action. It leaves all default bindings intact, including
+   Control-Command-Q for Calculator.
