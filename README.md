@@ -23,7 +23,7 @@ The bootstrap script:
 1. restores the tracked explicit package set through Omarchy's package helpers;
 2. backs up conflicting stock files that the repository will manage;
 3. links the `desktop` package into the home directory;
-4. enables resolution-aware SPICE display scaling;
+4. enables resolution-aware SPICE display scaling and automatic theme switching;
 5. reloads and validates Hyprland.
 
 ## Layout
@@ -113,6 +113,15 @@ macOS-like pointer speed and acceleration in both modes.
 The active Foot terminal uses an `11pt` font. Its configuration otherwise
 retains Omarchy's defaults and continues importing the active theme's
 generated colors. Other terminal configurations remain at Omarchy defaults.
+
+## Automatic theme
+
+A user timer checks every five minutes while the graphical session is active
+and shortly after login. The helper uses Helsinki sunrise and sunset, choosing
+the current Lupine theme in daylight and the installed Vaadin theme at night.
+It only calls Omarchy when the theme needs to change. Solar times are calculated
+locally with Python's standard library; the theme itself remains managed by
+Omarchy. The location is set in `desktop/.local/bin/auto-omarchy-theme`.
 
 ## Keyboard shortcuts
 

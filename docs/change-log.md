@@ -222,3 +222,14 @@ to recreating the machine; reproducible provisioning commands live in
    login. Added a manual, no-shell-history token provisioning, verification,
    and rotation guide at `docs/claude-auth.md`; no credential is stored in the
    repository.
+
+## 2026-09-23
+
+1. Added a Helsinki sunrise/sunset helper that selects Lupine during daylight
+   and Vaadin after dark. A graphical-session user timer checks every five
+   minutes and shortly after login, switching only when needed.
+2. Linked the new helper and units into the live home directory and enabled
+   `auto-omarchy-theme.timer`. The first service run completed successfully.
+   A full `stow --restow desktop` was blocked by pre-existing unmanaged and
+   absolute-symlink conflicts, including a modified Foot config, so those
+   existing files were left alone.

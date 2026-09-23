@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the Omarchy theme against Helsinki daylight
+PartOf=graphical-session.target
+
+[Timer]
+OnActiveSec=10s
+OnCalendar=*:0/5
+Persistent=true
+Unit=auto-omarchy-theme.service
+
+[Install]
+WantedBy=graphical-session.target
