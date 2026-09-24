@@ -122,6 +122,8 @@ the current Lupine theme in daylight and the installed Vaadin theme at night.
 It only calls Omarchy when the theme needs to change. Solar times are calculated
 locally with Python's standard library; the theme itself remains managed by
 Omarchy. The location is set in `desktop/.local/bin/auto-omarchy-theme`.
+Whenever Vaadin is selected, a theme-set hook chooses its constellation
+background (`03-constellation.jpg`).
 
 ## Keyboard shortcuts
 

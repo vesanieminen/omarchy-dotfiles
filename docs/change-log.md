@@ -233,3 +233,10 @@ to recreating the machine; reproducible provisioning commands live in
    A full `stow --restow desktop` was blocked by pre-existing unmanaged and
    absolute-symlink conflicts, including a modified Foot config, so those
    existing files were left alone.
+
+## 2026-09-24
+
+1. Added a theme-set hook that selects Vaadin's `03-constellation.jpg`
+   background whenever Vaadin is applied, including at the automatic sunset
+   transition. Linked it into the live config, confirmed `omarchy theme set
+   vaadin` selected Constellation, then restored the daytime Lupine theme.

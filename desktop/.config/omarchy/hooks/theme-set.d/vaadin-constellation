@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+[[ ${1:-} == vaadin ]] || exit 0
+
+omarchy theme bg set "$HOME/.local/state/omarchy/current/theme/backgrounds/03-constellation.jpg"
