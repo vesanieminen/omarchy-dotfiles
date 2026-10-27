@@ -76,6 +76,54 @@ therefore depend on the official guest stack; this helper applies scaling to
 whatever resolution the guest actually receives. A config reload restores the
 known-good 4K mode. Manual host resize/sleep/wake testing remains useful.
 
+## Temporarily test stock display behavior
+
+Yes: the personal display policy is reversible. There is no custom host-resize
+or sleep/wake bridge installed on this VM. The added helper only adjusts scale
+for resolutions reported by Hyprland; official guest components still handle
+resize/resume. Clipboard integration is separate.
+
+To test the installed Omarchy monitor defaults, disable the scale timer and
+replace the personal monitor-config **symlink** with a copy of the shipped
+configuration:
+
+```bash
+systemctl --user disable --now vm-display-scale.timer
+cp --remove-destination /usr/share/omarchy/config/hypr/monitors.lua "$HOME/.config/hypr/monitors.lua"
+hyprctl reload
+systemctl --user stop vm-display-scale.service
+# Match the shipped monitor template's GDK_SCALE=2 on this installation.
+systemctl --user set-environment GDK_SCALE=2
+hyprctl configerrors
+```
+
+`--remove-destination` is essential: it replaces the symlink instead of writing
+through it into the Git checkout. Loading the shipped file removes the custom
+monitor event handlers as well as the fixed 4K override. Disabling only the
+timer is insufficient because the personal event handlers also start the
+service. Stopping the service after reload covers a run queued by an old
+handler during the transition.
+
+These commands change the active display policy immediately; stock `preferred`
+may select 1280×800 or fractional scaling. Restart GTK applications for their
+new environment, or log out/in to test session startup as well. You can then
+resize the host window and test host sleep/wake with the personal display
+policy absent. Keyboard, clipboard, themes, and other personal settings remain
+in use; this is a display-policy comparison, not a completely stock desktop.
+
+Restore the personal display policy and timers with:
+
+```bash
+cd ~/dotfiles
+./bootstrap
+```
+
+Bootstrap backs up the temporary stock monitor file and reinstates the tracked
+symlink, 4K startup mode, event handlers, timer, and `GDK_SCALE=1`. It also
+reapplies the other documented settings. `scripts/validate` intentionally fails
+while stock-display testing is active because the monitor file is temporarily
+outside Stow and the scaling timer is disabled.
+
 ## Automatic themes
 
 The theme helper calculates Helsinki sunrise/sunset locally. It selects
