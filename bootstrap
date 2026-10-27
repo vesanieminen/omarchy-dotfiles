@@ -1,58 +1,47 @@
 #!/usr/bin/env bash
-
+# Run as your desktop user, in the active Omarchy graphical session.
 set -euo pipefail
-
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-backup_dir=""
+[[ $EUID != 0 ]] || { echo "Run bootstrap as your desktop user, not root." >&2; exit 1; }
+command -v omarchy >/dev/null
+# Fail before changing files if the desktop session is inaccessible.
+hyprctl -j monitors >/dev/null
+systemctl --user show-environment >/dev/null
+"$repo_dir/scripts/install-packages"
 
-backup_unmanaged_file() {
-  local relative_path=$1
-  local target="${HOME}/${relative_path}"
-  local tracked="${repo_dir}/desktop/${relative_path}"
-
-  [[ -f ${tracked} ]] || {
-    printf 'Missing tracked file: %s\n' "${tracked}" >&2
-    exit 1
-  }
-
-  if [[ -e ${target} && ! -L ${target} ]]; then
-    if [[ -z ${backup_dir} ]]; then
-      backup_dir="${HOME}/.local/state/dotfiles/backups/$(date +%Y%m%d-%H%M%S)"
-    fi
-    mkdir -p -- "$(dirname -- "${backup_dir}/${relative_path}")"
-    mv -- "${target}" "${backup_dir}/${relative_path}"
-    printf 'Backed up %s under %s\n' "${target}" "${backup_dir}"
+backup_dir="$HOME/.local/state/dotfiles/backups/$(date +%Y%m%d-%H%M%S-%N)"
+# Back up every conflicting file/link, including units and hooks on repeat installs.
+# Never adopt live content into the repository, and never move a parent directory.
+while IFS= read -r -d '' tracked; do
+  relative=${tracked#"$repo_dir/desktop/"}
+  target="$HOME/$relative"
+  if [[ -L $target && $(readlink -f -- "$target") == "$tracked" ]]; then
+    continue
   fi
-}
+  if [[ -e $target || -L $target ]]; then
+    [[ ! -d $target || -L $target ]] || { echo "Directory conflicts with file: $target" >&2; exit 1; }
+    mkdir -p -- "$backup_dir/$(dirname -- "$relative")"
+    mv -- "$target" "$backup_dir/$relative"
+    printf 'Backed up %s\n' "$relative"
+  fi
+done < <(find "$repo_dir/desktop" -type f -print0)
 
-command -v omarchy >/dev/null 2>&1 || {
-  printf 'Omarchy is required before running this bootstrap.\n' >&2
-  exit 1
-}
-
-"${repo_dir}/scripts/install-packages"
-"${repo_dir}/scripts/remove-webapps"
-
-backup_unmanaged_file .config/hypr/monitors.lua
-backup_unmanaged_file .config/hypr/input.lua
-backup_unmanaged_file .config/hypr/bindings.lua
-backup_unmanaged_file .config/foot/foot.ini
-backup_unmanaged_file .bashrc
-backup_unmanaged_file .local/bin/gh
-backup_unmanaged_file .local/bin/claude
-
-stow --dir="${repo_dir}" --target="${HOME}" --restow desktop
-
+stow --dir="$repo_dir" --target="$HOME" --no-folding --restow desktop
 systemctl --user daemon-reload
-systemctl --user enable --now spice-display-scale.path spice-display-scale.service
-systemctl --user enable --now auto-omarchy-theme.timer
 systemctl --user set-environment GDK_SCALE=1
-
 hyprctl reload
-config_errors=$(hyprctl configerrors)
-if [[ -n ${config_errors} ]]; then
-  printf '%s\n' "${config_errors}" >&2
-  exit 1
-fi
+errors=$(hyprctl configerrors)
+[[ -z $errors ]] || { printf '%s\n' "$errors" >&2; exit 1; }
+systemctl --user enable --now vm-display-scale.timer
+systemctl --user start vm-display-scale.service
 
-printf 'Dotfiles applied and Hyprland configuration validated.\n'
+if [[ ! -d $HOME/.config/omarchy/themes/vaadin ]]; then
+  omarchy theme install https://github.com/vesanieminen/omarchy-vaadin-theme.git
+fi
+systemctl --user enable --now auto-omarchy-theme.timer
+systemctl --user start auto-omarchy-theme.service
+"$repo_dir/scripts/remove-webapps"
+omarchy restart terminal
+"$repo_dir/scripts/validate"
+printf 'Dotfiles applied. Backups (if needed): %s\n' "$backup_dir"
+printf 'Open a new Foot window for the font change; log in again for session PATH.\n'

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+errors=$(hyprctl configerrors)
+[[ -z $errors ]] || { printf '%s\n' "$errors" >&2; exit 1; }
+while IFS= read -r -d '' tracked; do
+  relative=${tracked#"$repo_dir/desktop/"}
+  [[ -L $HOME/$relative && $(readlink -f -- "$HOME/$relative") == "$tracked" ]] || {
+    printf 'Not linked to this checkout: %s\n' "$relative" >&2; exit 1;
+  }
+done < <(find "$repo_dir/desktop" -type f -print0)
+for timer in vm-display-scale.timer auto-omarchy-theme.timer; do
+  systemctl --user is-enabled --quiet "$timer"
+  systemctl --user is-active --quiet "$timer"
+done
+for service in vm-display-scale.service auto-omarchy-theme.service; do
+  [[ $(systemctl --user show "$service" -p Result --value) == success ]]
+done
+[[ -f $HOME/.config/omarchy/themes/vaadin/backgrounds/03-constellation.jpg ]]
+# Prevent accidental reintroduction of the old custom ARM distribution.
+! pacman -Qq | grep -Eq '^(omarchy-aarch64-(config|keyring)|omarchy-spice-guest-tools|linux-aarch64)$'
+printf 'Links, Hyprland, timers, theme, and package exclusions validated.\n'

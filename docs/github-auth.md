@@ -1,24 +1,27 @@
 # GitHub CLI authentication for local agents
 
-The fine-grained GitHub PAT lives in GNOME Keyring through the freedesktop
-Secret Service API. GNOME Shell is not required; Omarchy's Hyprland session
+An optional personal fine-grained GitHub PAT can live in GNOME Keyring through
+the freedesktop Secret Service API. The existing native GitHub CLI login is
+also supported and does not require this extra entry. GNOME Shell is not required; Omarchy's Hyprland session
 already includes `gnome-keyring`, `libsecret`, and `secret-tool`.
 
-The tracked `~/.local/bin/gh` wrapper looks up the PAT and exports `GH_TOKEN`
-only for the lifetime of the real GitHub CLI process. It then delegates to
-Omarchy's original Mise-based `gh` launcher behavior.
+The tracked `~/.local/bin/gh` wrapper optionally looks up the personal PAT and
+exports `GH_TOKEN` only for the real GitHub CLI process. If no personal PAT is
+present, the existing native `gh auth login` keyring authentication remains
+available. The wrapper invokes `mise exec gh -- gh` using the official Omarchy
+tool selection, without changing global Mise settings or release-age policy.
 
 The tracked `~/.bashrc` gives `~/.local/bin` precedence after Omarchy's Mise
 activation. This ensures that the wrapper is selected by both interactive
 terminals and non-interactive agent shells, while the wrapper deliberately
-uses `mise x gh` to invoke the real CLI without recursion.
+uses `mise exec gh -- gh` to invoke the real CLI without recursion.
 
 The tracked `~/.config/uwsm/env.d/90-dotfiles-path` also puts
 `~/.local/bin` first in the graphical session inherited by terminals and other
 UWSM-launched applications. UWSM loads this file on login, so log out and back
 in—or reboot—after deploying it for the first time.
 
-## Store or replace the token
+## Optionally store or replace the personal token
 
 Run this manually in a terminal so the PAT never passes through an agent or
 appears in shell history:

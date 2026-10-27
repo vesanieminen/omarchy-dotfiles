@@ -1,59 +1,60 @@
-# Reproducible commands
+# Reproducible commands for the official Omarchy VM
 
-The repository records desired state and the commands that recreate it. It
-does not preserve transient diagnostics or blindly replay shell history.
-
-## Initial application
+## First installation
 
 ```bash
-git clone <your-dotfiles-repository> ~/dotfiles
+git clone https://github.com/vesanieminen/omarchy-dotfiles.git ~/dotfiles
 cd ~/dotfiles
 ./bootstrap
 ```
 
-`bootstrap` contains the actual provisioning commands. In order, the material
-operations are:
+Run bootstrap in the active graphical session as your regular user. Its
+tracked scripts are the authoritative provisioning workflow:
 
-```bash
-"$HOME/dotfiles/scripts/install-packages"
-"$HOME/dotfiles/scripts/remove-webapps"
-stow --dir="$HOME/dotfiles" --target="$HOME" --restow desktop
-systemctl --user daemon-reload
-systemctl --user enable --now spice-display-scale.path spice-display-scale.service
-systemctl --user enable --now auto-omarchy-theme.timer
-systemctl --user set-environment GDK_SCALE=1
-hyprctl reload
-hyprctl configerrors
-```
+1. `scripts/install-packages` installs only `packages/required.txt` via
+   `omarchy pkg add`; it never restores audit snapshots or custom repositories.
+2. Back up conflicting user files and symlinks under
+   `~/.local/state/dotfiles/backups/<timestamp>/`.
+3. `stow --dir="$HOME/dotfiles" --target="$HOME" --no-folding --restow desktop`.
+4. `systemctl --user daemon-reload` and
+   `systemctl --user set-environment GDK_SCALE=1`.
+5. `hyprctl reload` and `hyprctl configerrors`.
+6. Enable/start `vm-display-scale.timer` and run `vm-display-scale.service`.
+7. On first installation,
+   `omarchy theme install https://github.com/vesanieminen/omarchy-vaadin-theme.git`.
+8. Enable/start `auto-omarchy-theme.timer` and run `auto-omarchy-theme.service`.
+9. `scripts/remove-webapps`, `omarchy restart terminal`, and `scripts/validate`.
 
-`scripts/remove-webapps` records the stock Omarchy web apps intentionally
-excluded from this machine and removes them idempotently with
-`omarchy webapp remove`.
+Open a new Foot window for the font setting. Log in again to apply the UWSM
+session PATH; restart GTK applications for their changed GDK_SCALE.
 
-## Package inventory
+## Verification and snapshots
 
 ```bash
 cd ~/dotfiles
+./scripts/validate
+PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests
+hyprctl -j monitors
+hyprctl getoption input:kb_layout
+hyprctl getoption input:kb_variant
+hyprctl getoption input:natural_scroll
+hyprctl getoption input:scroll_factor
+systemctl --user list-timers vm-display-scale.timer auto-omarchy-theme.timer
 ./scripts/snapshot-packages
+git diff --check
+git diff
 ```
 
-The versioned complete package list is an audit snapshot. On a fresh Omarchy
-installation, `bootstrap` restores explicitly installed repository packages
-through Omarchy's package helpers. It does not attempt to downgrade packages
-to the historical versions in the audit snapshot.
+Snapshots record current package versions for auditing and are never used to
+install an obsolete kernel or custom ARM packages.
 
-## Remove the desktop links
+## GitHub writes
+
+For this machine's existing GitHub CLI keyring authentication, a one-shot
+credential helper avoids persisting additional global Git configuration:
 
 ```bash
-systemctl --user disable --now spice-display-scale.path spice-display-scale.service auto-omarchy-theme.timer
-stow --dir="$HOME/dotfiles" --target="$HOME" --delete desktop
+git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin main
 ```
 
-This removes only Stow-managed links. Backups made by `bootstrap` remain under
-`~/.local/state/dotfiles/backups/`.
-
-## GitHub authentication
-
-Store the fine-grained PAT once using the commands in `docs/github-auth.md`.
-After that, both humans and approved local agents can use the normal `gh`
-command. The tracked wrapper retrieves the token without printing it.
+No tokens appear in Git configuration, command arguments, or repository files.

@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# omarchy-vm-clipboard-bridge
+#
+# Bridges the SPICE/X11 clipboard (owned by spice-vdagent, i.e. the UTM host's
+# clipboard) to and from the Hyprland Wayland clipboard.
+#
+# Why this is needed: UTM shares the clipboard through the SPICE agent, which on
+# this build is X11-only. spice-vdagent takes ownership of the X11 CLIPBOARD
+# selection as a *windowless* client. Hyprland's XWayland integration does not
+# sync a windowless X selection to native Wayland clients, so wl-clipboard apps
+# never see the host clipboard (and vice-versa). This bridge closes that gap.
+#
+# It runs two loops:
+#   xtowl : X11 CLIPBOARD  -> Wayland   (host -> guest)
+#   wltox : Wayland        -> X11       (guest -> host)
+# Both compare content before writing, so they do not fight each other.
+#
+# Text only. Requires: xclip, wl-clipboard.
+# Start it once per Hyprland session (see the project autostart instructions).
+
+set -u
+
+export DISPLAY="${DISPLAY:-:0}"
+POLL="${CLIPBRIDGE_POLL:-0.5}"   # X11 poll interval, seconds
+
+command -v xclip   >/dev/null 2>&1 || { echo "omarchy-vm-clipboard-bridge: xclip not found" >&2; exit 1; }
+command -v wl-copy >/dev/null 2>&1 || { echo "omarchy-vm-clipboard-bridge: wl-clipboard not found" >&2; exit 1; }
+
+# X11 CLIPBOARD -> Wayland  (host copy shows up in Wayland apps)
+xtowl() {
+  local last="" cur wl
+  while sleep "$POLL"; do
+    cur=$(timeout 2 xclip -o -selection clipboard 2>/dev/null) || continue
+    [ -z "$cur" ] && continue
+    [ "$cur" = "$last" ] && continue
+    wl=$(timeout 2 wl-paste -n 2>/dev/null)
+    if [ "$cur" = "$wl" ]; then last=$cur; continue; fi
+    last=$cur
+    printf '%s' "$cur" | wl-copy
+  done
+}
+
+# Wayland -> X11 CLIPBOARD  (guest copy is sent to the host by spice-vdagent)
+wltox() {
+  wl-paste --watch sh -c '
+    cur=$(cat); [ -z "$cur" ] && exit 0
+    xc=$(timeout 2 xclip -o -selection clipboard 2>/dev/null)
+    [ "$cur" = "$xc" ] && exit 0
+    printf "%s" "$cur" | xclip -i -selection clipboard
+  '
+}
+
+xtowl & XPID=$!
+wltox & WPID=$!
+trap 'kill "$XPID" "$WPID" 2>/dev/null' EXIT INT TERM
+wait

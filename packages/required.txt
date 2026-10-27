@@ -1,0 +1,10 @@
+# Dependencies from the existing official Omarchy / Arch Linux ARM repositories.
+foot
+git
+libsecret
+mise-bin
+python
+spice-vdagent
+stow
+wl-clipboard
+xclip
