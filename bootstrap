@@ -1,5 +1,74 @@
 #!/usr/bin/env bash
 # Run as your desktop user, in the active Omarchy graphical session.
+#
+# Command record: official-VM migration, 2026-10-27.
+# This block preserves the one-time setup, verification, and publication commands
+# alongside the executable provisioning workflow below. Do not automatically
+# replay branch creation, Git commits/pushes, or snapshot writes on installation.
+# Exploratory file reads and failed connection/authentication attempts are not
+# provisioning steps; the successful commands and their outcomes are recorded.
+#
+# Initial checkout and preservation of the previous setup:
+#   git clone https://github.com/vesanieminen/omarchy-dotfiles.git ~/dotfiles
+#   cd ~/dotfiles
+#   git branch archive/custom-arm-vm-2026-10-27 3c8a63f6cfc802356fa22f5492d68749753f7f8d
+#   gh auth status
+#   git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin archive/custom-arm-vm-2026-10-27
+#
+# Install Stow in this non-interactive agent session through desktop PolicyKit:
+#   pkexec pacman -S --needed --noconfirm stow
+# In an interactive terminal the executable workflow uses omarchy pkg add,
+# which manages sudo itself. Both select the existing official repositories.
+#
+# Apply tracked configuration and confirm repeatability:
+#   ./bootstrap
+#   ./bootstrap
+# Bootstrap executes the package helper, backup/link operations, user-service
+# activation, first-install Vaadin theme installation, web-app exclusions,
+# terminal reload, and validation shown below. The exact installed files and
+# helper commands are versioned under desktop/ and scripts/.
+#
+# Verification performed after deployment:
+#   ./scripts/validate
+#   PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests
+#   bash -n bootstrap scripts/install-packages scripts/validate scripts/remove-webapps desktop/.local/bin/gh desktop/.local/bin/with-claude-oauth desktop/.local/bin/omarchy-vm-clipboard-bridge
+#   bash -n desktop/.bashrc desktop/.config/uwsm/env.d/90-dotfiles-path desktop/.config/omarchy/hooks/theme-set.d/vaadin-constellation
+#   systemd-analyze --user verify ~/.config/systemd/user/vm-display-scale.service ~/.config/systemd/user/vm-display-scale.timer ~/.config/systemd/user/auto-omarchy-theme.service ~/.config/systemd/user/auto-omarchy-theme.timer
+#   hyprctl configerrors
+#   hyprctl -j monitors
+#   hyprctl getoption input:kb_layout
+#   hyprctl getoption input:kb_variant
+#   hyprctl getoption input:natural_scroll
+#   hyprctl getoption input:scroll_factor
+#   systemctl --user list-timers vm-display-scale.timer auto-omarchy-theme.timer
+#   systemctl --user show vm-display-scale.service auto-omarchy-theme.service -p Id -p Result
+#   readlink -f ~/.local/state/omarchy/current/background
+#   bash -ic 'command -v gh; gh api user --jq .login'
+#   git -C ~/.config/omarchy/themes/vaadin rev-parse HEAD
+# Confirm the helper's monitor API with the already-active mode (not a resize):
+#   hyprctl eval 'hl.monitor({ output = "Virtual-1", mode = "3840x2160@60", position = "0x0", scale = 2, transform = 0 })'
+#   hyprctl configerrors
+#
+# Record package audit data and publish the verified configuration:
+#   ./scripts/snapshot-packages
+#   git diff --check
+#   git diff
+#   git add README.md bootstrap desktop docs packages scripts tests
+#   git diff --cached --check
+#   git commit -m "Make official Omarchy VM the canonical dotfiles setup"
+#   git -c credential.helper= -c 'credential.helper=!gh auth git-credential' push origin main
+#   git status --short
+#   git log -1 --format='%h %s'
+#   git rev-parse main origin/main archive/custom-arm-vm-2026-10-27
+#
+# The published migration commit is c47c0aec921e505428034f8e1506264dd32dd341.
+# Backups: ~/.local/state/dotfiles/backups/20261027-220437-340544958/
+# Theme source: https://github.com/vesanieminen/omarchy-vaadin-theme.git
+# Theme commit observed: 6941847158cac946c99bb465c736579542201fc6.
+# No system repositories, kernel, bootloader, or Omarchy-owned files were edited.
+# See docs/change-log.md for outcomes and README.md for recovery instructions.
+#
+# Executable provisioning workflow starts here.
 set -euo pipefail
 repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 [[ $EUID != 0 ]] || { echo "Run bootstrap as your desktop user, not root." >&2; exit 1; }

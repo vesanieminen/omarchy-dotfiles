@@ -57,3 +57,14 @@ modes, and config reload intentionally restores this VM's 4K startup mode.
 
 Publication: commit the verified setup on `main` and push with the one-shot
 GitHub CLI credential helper documented in `docs/commands.md`.
+
+
+## 2026-10-27 — command record in bootstrap
+
+Audited bootstrap and its supporting scripts against the migration session.
+All configuration-changing steps were already covered by the executable
+workflow. Added the successful one-time checkout/archive, PolicyKit package
+installation, verification, package snapshot, and Git publication commands as
+a comment block in bootstrap itself. This preserves the command record without
+making future installations recreate branches, commit, or push automatically.
+No deployed configuration or provisioning behavior changed.

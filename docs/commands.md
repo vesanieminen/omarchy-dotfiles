@@ -1,5 +1,11 @@
 # Reproducible commands for the official Omarchy VM
 
+The comment block at the top of [`bootstrap`](../bootstrap) preserves the
+successful migration, verification, and Git publication commands from the
+2026-10-27 session. The executable workflow below it remains safe to rerun:
+one-time branch creation, Git writes, and audit snapshot refreshes are recorded
+as comments rather than performed on every install.
+
 ## First installation
 
 ```bash
