@@ -105,3 +105,20 @@ Pre-change display files were copied to
 `~/.local/state/dotfiles/backups/stable-vm-display-20261028/`.
 Rollback instructions and journal commands are in README.md. No reboot,
 logout, host configuration change, or merge to main was performed.
+
+
+### Fullscreen-fit diagnosis on the 16-inch M3 Max host
+
+UTM fullscreen was not filling the display while the guest remained at
+3840×2160/2×. A brief debug run of the installed spice-vdagent confirmed an
+actual client monitor request for **3456×2160+0+0**. The agent failed with
+`XRRSetScreenSize failed` and restored 3840×2160; its Mutter D-Bus backend is
+also unavailable in this Hyprland session. The normal spice-vdagent service
+was restarted after collecting monitor-only diagnostic output.
+
+Applied the requested 3456×2160@60/2× directly through `hyprctl eval`.
+Hyprland accepted it without config errors; an explicit reload preserved it,
+and repeated samples retained it. This is a runtime correction for the current
+fullscreen session, not a repair to host-driven automatic resizing. The
+experimental cold-start 4K fallback is unchanged. The scaling helper alone
+cannot repair the confirmed SPICE-to-Hyprland resolution handoff failure.
