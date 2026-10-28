@@ -122,3 +122,40 @@ and repeated samples retained it. This is a runtime correction for the current
 fullscreen session, not a repair to host-driven automatic resizing. The
 experimental cold-start 4K fallback is unchanged. The scaling helper alone
 cannot repair the confirmed SPICE-to-Hyprland resolution handoff failure.
+
+
+### Native automatic resize adapter for host display changes
+
+On the external display, UTM requested 2560×1440 but the packaged session
+agent's X11 resize path failed, leaving 3456×2160/2×. Added a narrow native
+SPICE-to-Hyprland adapter on the experimental branch:
+
+- A user drop-in wraps the existing spice-vdagent.service. The Python adapter
+  connects to the packaged daemon, reads its structured local socket protocol,
+  and launches the unmodified packaged session agent behind a private socket.
+- Complete monitor-config messages are intercepted and debounced for one
+  second, then applied through Hyprland together with the appropriate scale.
+  Other message frames are relayed unchanged. The daemon acknowledges monitor
+  requests itself; the failing X11 monitor handler is bypassed.
+- Supports exactly one active Virtual-* output; malformed, unsupported, or
+  multi-output requests are rejected. Sparse 16-slot UTM messages work. At 2×,
+  odd requested dimensions round down by at most one pixel per axis. The guest
+  refresh rate is retained because SPICE monitor requests carry no refresh rate.
+- Protocol definitions were checked against upstream linux/vd_agent
+  src/udscs.h, src/vdagentd-proto.h, and spice-protocol/spice/vd_agent.h.
+  No debug-log parsing, external package installation, daemon replacement, or
+  changes under /usr/share/omarchy were needed.
+- Bootstrap applies the drop-in to an already-running session agent. README
+  documents rollback and updated stock-testing steps.
+
+Verification: all 27 regression tests pass, covering fragmented framing,
+clipboard frame passthrough, invalid/multi-display layouts, burst coalescing,
+duplicate no-ops, the 1440p/Retina scale policies, and asynchronous verification.
+During the user's actual UTM fullscreen/windowed test, the adapter applied
+1920×1080/1× and then 2560×1440/1× automatically. Fixed an overly eager initial
+verification that could log a false failure before Hyprland finished applying
+the mode. The final service restart and Hyprland reload retain 2560×1440@60/1×;
+service is active with no automatic restarts and Hyprland configerrors is empty.
+Host clipboard end-to-end behaviour and lid/resume still need user feedback;
+frame-relay tests verify clipboard bytes are forwarded unchanged. Existing Foot
+link mismatch remains outside this change. Main is unchanged.

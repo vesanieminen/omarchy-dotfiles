@@ -97,6 +97,8 @@ done < <(find "$repo_dir/desktop" -type f -print0)
 
 stow --dir="$repo_dir" --target="$HOME" --no-folding --restow desktop
 systemctl --user daemon-reload
+# Apply the native display adapter to an already-running packaged SPICE agent.
+systemctl --user try-restart spice-vdagent.service
 systemctl --user set-environment GDK_SCALE=1
 hyprctl reload
 errors=$(hyprctl configerrors)

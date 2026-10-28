@@ -60,16 +60,26 @@ Experimental policy on `experiment/stable-vm-display`:
 - Cold startup (no outputs yet) requests **3840×2160 at 60 Hz, scale 2**.
   Configuration reloads preserve the live virtual display resolution, layout,
   and scale instead of resetting a UTM-selected mode to 4K.
-- UTM/official guest components remain responsible for fullscreen/windowed
-  resizing and host sleep/wake. There is no custom host-resolution bridge.
+- `vm-spice-display-agent` receives UTM monitor requests from the packaged
+  SPICE daemon and applies them through Hyprland. The packaged session agent
+  handles other traffic through a private Unix socket. A user service drop-in
+  runs the adapter as the existing `spice-vdagent.service`; no system package
+  or additional service unit is installed. It supports one active virtual output.
+  Complete requests are coalesced until no new request arrives for one second.
+  Malformed or multi-output layouts are rejected without partial application.
+  Requests are structured protocol messages, not parsed debug logs.
+  See upstream [local framing](https://gitlab.freedesktop.org/spice/linux/vd_agent/-/blob/master/src/udscs.h)
+  and [monitor messages](https://spice.pages.freedesktop.org/spice-space/agent-protocol.html).
 - `vm-display-scale` waits for three matching samples over one second before
-  applying a change. If resizing continues for five seconds, it defers to the
+  applying a scale-only change. If resizing continues for five seconds, it defers to the
   next event or timer tick. Sleeping/disabled/zero-sized outputs are ignored.
 - Scale switches to 2× at **1900 pixels high or above**, to 1× at **1600 or
   below**, and stays unchanged between those thresholds. Odd dimensions also
-  retain their scale until an even mode arrives. This avoids a 2×/1× jump on
-  each odd pixel during window resizing; it does not identify physical Retina
-  density. Stable odd-sized windows can therefore retain the previous scale.
+  retain their scale in the scale-only helper. The native adapter rounds a
+  requested 2× mode down by at most one pixel per dimension so odd window sizes
+  do not cause scale flips. Neither helper identifies physical Retina density.
+  SPICE monitor requests do not include refresh rate: the adapter retains the
+  guest output refresh rate (currently 60 Hz).
 - Immediately before applying, compositor-side guards reject a stale sampled
   size/scale. The rule uses the compositor's live mode, position, and transform.
 - Hyprland startup, reload, and layout events start the helper. A timer checks
@@ -80,37 +90,47 @@ Experimental policy on `experiment/stable-vm-display`:
 Inspect actual scaling changes while testing:
 
 ```bash
-journalctl --user -u vm-display-scale.service -f -o cat
+journalctl --user -u spice-vdagent.service -u vm-display-scale.service -f -o cat
 ~/.local/bin/vm-display-scale --dry-run
 ```
 
 Try fullscreen → windowed → fullscreen, moving UTM between Retina and non-Retina
 screens, and host lid close/open. Note the timestamp of any blink. The helper
 cannot fix host/guest transport failures or determine the host display density.
+UTM Auto Resolution must be enabled and the VM must be visible on the intended
+host screen. Attaching a monitor alone does not move the VM to that monitor.
 
 To return to the previous policy from a clean experimental checkout:
 
 ```bash
 cd ~/dotfiles
+systemctl --user stop spice-vdagent.service
+rm ~/.config/systemd/user/spice-vdagent.service.d/60-native-display.conf
+rm ~/.local/bin/vm-spice-display-agent
 git switch main
 systemctl --user daemon-reload
 hyprctl reload
 hyprctl configerrors
 systemctl --user restart vm-display-scale.timer
+systemctl --user restart spice-vdagent.service
 ```
 
 ## Temporarily test stock display behavior
 
-Yes: the personal display policy is reversible. There is no custom host-resize
-or sleep/wake bridge installed on this VM. The added helper only adjusts scale
-for resolutions reported by Hyprland; official guest components still handle
-resize/resume. Clipboard integration is separate.
+The personal display policy and native SPICE adapter are reversible. The
+adapter handles host resolution requests; the separate scale-only helper
+reconciles resolutions already reported by Hyprland. For a stock test, disable
+both the adapter and scale policy. Clipboard integration is separate.
 
 To test the installed Omarchy monitor defaults, disable the scale timer and
 replace the personal monitor-config **symlink** with a copy of the shipped
 configuration:
 
 ```bash
+# Remove only the deployed adapter drop-in symlink for the stock test.
+rm ~/.config/systemd/user/spice-vdagent.service.d/60-native-display.conf
+systemctl --user daemon-reload
+systemctl --user restart spice-vdagent.service
 systemctl --user disable --now vm-display-scale.timer
 cp --remove-destination /usr/share/omarchy/config/hypr/monitors.lua "$HOME/.config/hypr/monitors.lua"
 hyprctl reload
@@ -142,8 +162,8 @@ cd ~/dotfiles
 ```
 
 Bootstrap backs up the temporary stock monitor file and reinstates the tracked
-symlink, branch-specific display policy, event handlers, timer, and
-`GDK_SCALE=1`. It also reapplies the other documented settings. `scripts/validate` intentionally fails
+symlink, branch-specific display policy, SPICE adapter, event handlers, timer,
+and `GDK_SCALE=1`. It also reapplies the other documented settings. `scripts/validate` intentionally fails
 while stock-display testing is active because the monitor file is temporarily
 outside Stow and the scaling timer is disabled.
 
@@ -176,8 +196,10 @@ See [commands](docs/commands.md), [migration log](docs/change-log.md), and
 ```bash
 systemctl --user disable --now vm-display-scale.timer auto-omarchy-theme.timer
 systemctl --user stop vm-display-scale.service auto-omarchy-theme.service
+systemctl --user stop spice-vdagent.service
 stow --dir="$HOME/dotfiles" --target="$HOME" --no-folding --delete desktop
 systemctl --user daemon-reload
+systemctl --user restart spice-vdagent.service
 ```
 
 Then restore the selected files from the timestamped backup before reloading

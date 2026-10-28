@@ -1,0 +1,214 @@
+#!/usr/bin/env python3
+"""Route SPICE monitor requests to Hyprland; relay other traffic to stock agent.
+
+Local socket framing: upstream linux/vd_agent src/udscs.h and vdagentd-proto.h.
+The daemon acknowledges host requests itself, so the X11 resize handler can be
+bypassed without changing the host protocol or the packaged agent.
+"""
+import asyncio
+import contextlib
+import json
+import os
+from pathlib import Path
+import struct
+
+HEADER = struct.Struct('=IIII')  # native-endian local Unix socket protocol
+MONITOR = struct.Struct('=IIIii')
+MAX_MESSAGE = 64 * 1024 * 1024
+DAEMON_SOCKET = '/run/spice-vdagentd/spice-vdagent-sock'
+
+
+def parse_layout(payload):
+    if len(payload) < 8:
+        raise ValueError('short monitor config')
+    count, flags = struct.unpack_from('=II', payload)
+    # Flag 2 adds two uint16 physical-size fields per monitor; flag 1 is positions.
+    expected = 8 + count * (MONITOR.size + (4 if flags & 2 else 0))
+    if not 1 <= count <= 16 or flags & ~3 or len(payload) != expected:
+        raise ValueError('unsupported monitor config size/flags')
+    active = []
+    for index in range(count):
+        height, width, depth, x, y = MONITOR.unpack_from(payload, 8 + index * MONITOR.size)
+        if width == height == 0:
+            continue
+        if not (640 <= width <= 8192 and 480 <= height <= 8192):
+            raise ValueError('invalid monitor dimensions')
+        active.append((index, width, height, x, y))
+    # This VM currently exposes one virtual display. Never silently apply only
+    # part of a multi-display request or guess which virtual connector it owns.
+    if len(active) != 1 or active[0][0] != 0:
+        raise ValueError('only one active virtual display is supported')
+    return active[0][1:]
+
+
+async def read_frame(reader):
+    header = await reader.readexactly(HEADER.size)
+    kind, arg1, arg2, size = HEADER.unpack(header)
+    if size > MAX_MESSAGE:
+        raise ValueError('oversized agent message')
+    return kind, header, await reader.readexactly(size)
+
+
+async def command(*args):
+    proc = await asyncio.create_subprocess_exec(*args, stdout=asyncio.subprocess.PIPE,
+                                              stderr=asyncio.subprocess.PIPE)
+    try:
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), 4)
+    except BaseException:
+        with contextlib.suppress(ProcessLookupError):
+            proc.kill()
+        await proc.wait()
+        raise
+    if proc.returncode:
+        raise RuntimeError(stderr.decode(errors='replace')[:200])
+    return stdout
+
+
+def resize_rule(monitor, request):
+    width, height, _, _ = request
+    scale = monitor['scale']
+    if height <= 1600:
+        scale = 1
+    elif height >= 1900:
+        scale = 2
+    # A 2x scale needs even dimensions. At most one pixel of host margin is
+    # preferable to switching to 1x whenever a window is dragged by one pixel.
+    if scale == 2:
+        width -= width % 2
+        height -= height % 2
+    return dict(output=monitor['name'], mode=f'{width}x{height}@{monitor["refreshRate"]:.5f}',
+                position=f'{monitor["x"]}x{monitor["y"]}', scale=scale,
+                transform=monitor.get('transform', 0)), (width, height, scale)
+
+
+class ResizeHandler:
+    def __init__(self):
+        self.pending = None
+        self.changed = asyncio.Event()
+
+    def request(self, layout):
+        self.pending = layout
+        self.changed.set()
+
+    async def run(self):
+        while True:
+            await self.changed.wait()
+            # Coalesce bursts until no newer request has arrived for one second.
+            while True:
+                self.changed.clear()
+                try:
+                    await asyncio.wait_for(self.changed.wait(), 1)
+                except asyncio.TimeoutError:
+                    break
+            request = self.pending
+            if request is None:
+                continue
+            try:
+                monitors = json.loads(await command('hyprctl', '-j', 'monitors'))
+                virtual = [m for m in monitors if m['name'].startswith('Virtual-')
+                           and not m.get('disabled')]
+                if len(virtual) != 1:
+                    raise ValueError('expected exactly one active virtual output')
+                monitor = virtual[0]
+                if not monitor.get('dpmsStatus', True):
+                    # Keep this request pending through sleep; retry on wake.
+                    await asyncio.sleep(1)
+                    self.changed.set()
+                    continue
+                rule, target = resize_rule(monitor, request)
+                if (monitor['width'], monitor['height'], monitor['scale']) == target:
+                    continue
+                if self.changed.is_set():
+                    continue
+                fields = ', '.join(f'{key} = {json.dumps(value)}' for key, value in rule.items())
+                await command('hyprctl', 'eval', 'hl.monitor({ ' + fields + ' })')
+                # Monitor rules apply asynchronously. Verify without issuing the
+                # rule again; a newer host request supersedes this verification.
+                success = False
+                for _ in range(10):
+                    await asyncio.sleep(0.2)
+                    observed = json.loads(await command('hyprctl', '-j', 'monitors'))
+                    actual = next((m for m in observed if m['name'] == monitor['name']), None)
+                    if actual and (actual['width'], actual['height'], actual['scale']) == target:
+                        success = True
+                        break
+                    if self.changed.is_set():
+                        break
+                print(json.dumps(dict(event='host-resize', requested=request[:2],
+                                      applied=rule, success=success)), flush=True)
+                if not success and not self.changed.is_set():
+                    raise RuntimeError('compositor did not accept requested mode')
+            except (ValueError, RuntimeError, OSError, asyncio.TimeoutError) as error:
+                print(f'host-resize error: {error}', flush=True)
+
+
+async def relay(reader, writer, handler=None):
+    while True:
+        kind, header, payload = await read_frame(reader)
+        if handler is not None and kind == 1:  # VDAGENTD_MONITORS_CONFIG
+            try:
+                handler.request(parse_layout(payload))
+            except ValueError as error:
+                print(f'host-resize ignored: {error}', flush=True)
+            continue  # never send the request to the failing X11 resize path
+        if handler is not None and kind == 12:  # host client disconnected
+            handler.pending = None
+            handler.changed.set()
+        writer.write(header + payload)
+        await writer.drain()
+
+
+async def main():
+    runtime = Path(os.environ['XDG_RUNTIME_DIR']) / 'vm-spice-display'
+    runtime.mkdir(mode=0o700, exist_ok=True)
+    local_socket = runtime / 'agent.sock'
+    local_socket.unlink(missing_ok=True)
+    stopped = asyncio.get_running_loop().create_future()
+    handler = ResizeHandler()
+
+    async def connected(reader, writer):
+        tasks = []
+        remote_writer = None
+        try:
+            remote_reader, remote_writer = await asyncio.open_unix_connection(DAEMON_SOCKET)
+            tasks = [asyncio.create_task(relay(reader, remote_writer)),
+                     asyncio.create_task(relay(remote_reader, writer, handler))]
+            done, _ = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+            for task in done:
+                task.result()
+        except (asyncio.IncompleteReadError, ConnectionError, OSError, ValueError) as error:
+            print(f'agent connection ended: {type(error).__name__}', flush=True)
+        finally:
+            for task in tasks:
+                task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+            writer.close()
+            if remote_writer:
+                remote_writer.close()
+            if not stopped.done():
+                stopped.set_result(None)
+
+    server = await asyncio.start_unix_server(connected, path=str(local_socket))
+    child = await asyncio.create_subprocess_exec('/usr/bin/spice-vdagent', '-x',
+                                                 '-S', str(local_socket),
+                                                 stderr=asyncio.subprocess.DEVNULL)
+    resize_task = asyncio.create_task(handler.run())
+    child_task = asyncio.create_task(child.wait())
+    print('SPICE native monitor bridge started (single virtual display)', flush=True)
+    try:
+        await asyncio.wait([child_task, stopped], return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        server.close()
+        await server.wait_closed()
+        resize_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await resize_task
+        if child.returncode is None:
+            child.terminate()
+        await child_task
+        local_socket.unlink(missing_ok=True)
+    raise RuntimeError('SPICE session ended; restarting')
+
+
+if __name__ == '__main__':
+    asyncio.run(main())
