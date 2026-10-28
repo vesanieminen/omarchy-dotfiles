@@ -55,7 +55,9 @@ old custom ARM distribution or applications removed from this VM.
 
 ## Display policy on official Omarchy
 
-Experimental policy on `experiment/stable-vm-display`:
+The display policy follows UTM resize requests through SPICE and Hyprland.
+Validated on 2026-10-28 with fullscreen/windowed transitions, Retina and
+2560×1440 external displays, and host sleep/wake.
 
 - Cold startup (no outputs yet) requests **3840×2160 at 60 Hz, scale 2**.
   Configuration reloads preserve the live virtual display resolution, layout,
@@ -71,8 +73,8 @@ Experimental policy on `experiment/stable-vm-display`:
   See upstream [local framing](https://gitlab.freedesktop.org/spice/linux/vd_agent/-/blob/master/src/udscs.h)
   and [monitor messages](https://spice.pages.freedesktop.org/spice-space/agent-protocol.html).
 - `vm-display-scale` waits for three matching samples over one second before
-  applying a scale-only change. If resizing continues for five seconds, it defers to the
-  next event or timer tick. Sleeping/disabled/zero-sized outputs are ignored.
+  applying a scale-only change. If resizing continues for five seconds, it
+  defers to the next event or timer tick. Sleeping/disabled/zero-sized outputs are ignored.
 - Scale switches to 2× at **1900 pixels high or above**, to 1× at **1600 or
   below**, and stays unchanged between those thresholds. Odd dimensions also
   retain their scale in the scale-only helper. The native adapter rounds a
@@ -87,7 +89,7 @@ Experimental policy on `experiment/stable-vm-display`:
   no-op. Only attempted scale changes or failures are logged by the helper.
 - GTK uses `GDK_SCALE=1`; existing GTK applications need restarting to inherit it.
 
-Inspect actual scaling changes while testing:
+Inspect actual resolution and scaling changes:
 
 ```bash
 journalctl --user -u spice-vdagent.service -u vm-display-scale.service -f -o cat
@@ -100,14 +102,15 @@ cannot fix host/guest transport failures or determine the host display density.
 UTM Auto Resolution must be enabled and the VM must be visible on the intended
 host screen. Attaching a monitor alone does not move the VM to that monitor.
 
-To return to the previous policy from a clean experimental checkout:
+To return to the configuration before the native resize work from a clean
+checkout (this checks out the historical commit in detached HEAD mode):
 
 ```bash
 cd ~/dotfiles
 systemctl --user stop spice-vdagent.service
 rm ~/.config/systemd/user/spice-vdagent.service.d/60-native-display.conf
 rm ~/.local/bin/vm-spice-display-agent
-git switch main
+git switch --detach 52cf117
 systemctl --user daemon-reload
 hyprctl reload
 hyprctl configerrors

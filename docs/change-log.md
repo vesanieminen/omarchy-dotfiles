@@ -159,3 +159,15 @@ service is active with no automatic restarts and Hyprland configerrors is empty.
 Host clipboard end-to-end behaviour and lid/resume still need user feedback;
 frame-relay tests verify clipboard bytes are forwarded unchanged. Existing Foot
 link mismatch remains outside this change. Main is unchanged.
+
+
+### Release to main after user testing
+
+The user confirmed successful fullscreen/windowed and Retina/external-display
+transitions, followed by a successful host sleep/wake test, and authorized
+shipping. Promoted the display changes to main and updated the README to
+identify the tested configuration and retain rollback to pre-change commit
+52cf117. Final checks: all 27 automated tests pass; Hyprland reports no config
+errors; SPICE adapter is active and both display services report success.
+The pre-existing Foot deployment-link difference remains unchanged. Full
+repository validation therefore still has that unrelated limitation.
