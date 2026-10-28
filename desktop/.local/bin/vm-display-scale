@@ -1,33 +1,94 @@
 #!/usr/bin/env python3
-"""Scale virtual outputs from their actual pixel height, retaining mode/layout."""
+"""Debounce virtual-display scaling without replaying stale monitor modes."""
+import argparse
 import json
 import subprocess
+import time
+
+UP_HEIGHT = 1900
+DOWN_HEIGHT = 1600
 
 
 def scale_updates(monitors):
     for monitor in monitors:
-        if not monitor["name"].startswith("Virtual-") or monitor.get("disabled"):
+        if (not monitor["name"].startswith("Virtual-") or monitor.get("disabled")
+                or not monitor.get("dpmsStatus", True)
+                or monitor["width"] <= 0 or monitor["height"] <= 0):
             continue
-        desired = 2 if monitor["height"] >= 1800 else 1
-        # Integer 2x cannot represent odd physical dimensions exactly.
-        if desired == 2 and (monitor["width"] % 2 or monitor["height"] % 2):
+        # Odd dimensions are common during UTM window resizing. Hold the scale
+        # until an exactly representable mode arrives, rather than jumping to 1x.
+        if monitor["width"] % 2 or monitor["height"] % 2:
+            continue
+        desired = monitor["scale"]
+        if monitor["height"] >= UP_HEIGHT:
+            desired = 2
+        elif monitor["height"] <= DOWN_HEIGHT:
             desired = 1
-        if monitor["scale"] == desired:
-            continue
-        yield {
-            "output": monitor["name"],
-            "mode": f'{monitor["width"]}x{monitor["height"]}@{monitor["refreshRate"]:.5f}',
-            "position": f'{monitor["x"]}x{monitor["y"]}',
-            "scale": desired,
-            "transform": monitor.get("transform", 0),
-        }
+        if monitor["scale"] != desired:
+            yield {"output": monitor["name"], "scale": desired,
+                   "width": monitor["width"], "height": monitor["height"],
+                   "old_scale": monitor["scale"]}
+
+
+def read_monitors():
+    return json.loads(subprocess.check_output(
+        ["hyprctl", "-j", "monitors"], timeout=3))
+
+
+def signature(monitors):
+    # Ignore focus, workspaces and reserved bar space; those are not resizes.
+    keys = ("name", "width", "height", "scale", "refreshRate", "x", "y",
+            "transform", "disabled", "dpmsStatus")
+    return sorted(tuple(m.get(k) for k in keys) for m in monitors)
+
+
+def settled_monitors(read=read_monitors, sleep=time.sleep):
+    previous = None
+    stable = 0
+    # Require three identical samples (one second); give up during a long drag.
+    for attempt in range(11):
+        monitors = read()
+        current = signature(monitors)
+        stable = stable + 1 if current == previous else 1
+        if stable >= 3:
+            return monitors
+        previous = current
+        if attempt < 10:
+            sleep(0.5)
+    return []
+
+
+def lua_update(update):
+    # Read mode/layout in the compositor, and reject a resize since sampling.
+    # hl.monitor requires a complete rule: omitted mode/position have defaults.
+    name = json.dumps(update["output"])
+    return f'''local m = hl.get_monitor({name})
+if m and m.dpms_status and m.width == {update["width"]}
+    and m.height == {update["height"]} and m.scale == {update["old_scale"]} then
+  hl.monitor({{ output = {name}, scale = {update["scale"]},
+    mode = string.format("%dx%d@%.5f", m.width, m.height, m.refresh_rate),
+    position = string.format("%dx%d", m.x, m.y), transform = m.transform }})
+end'''
 
 
 def main():
-    monitors = json.loads(subprocess.check_output(["hyprctl", "-j", "monitors"]))
-    for config in scale_updates(monitors):
-        fields = ", ".join(f"{key} = {json.dumps(value)}" for key, value in config.items())
-        subprocess.run(["hyprctl", "eval", "hl.monitor({ " + fields + " })"], check=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args()
+    # Ordinary timer ticks do not change settings, log, or wait when correct.
+    if not list(scale_updates(read_monitors())):
+        return
+    for update in scale_updates(settled_monitors()):
+        if args.dry_run:
+            print(json.dumps(update), flush=True)
+            continue
+        subprocess.run(["hyprctl", "eval", lua_update(update)], check=True,
+                       timeout=3, stdout=subprocess.DEVNULL)
+        actual = next((m for m in read_monitors()
+                       if m["name"] == update["output"]), None)
+        print(json.dumps({"event": "scale-request", **update,
+                          "observed_scale": actual.get("scale") if actual else None}),
+              flush=True)
 
 
 if __name__ == "__main__":

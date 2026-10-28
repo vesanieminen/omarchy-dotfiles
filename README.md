@@ -55,26 +55,49 @@ old custom ARM distribution or applications removed from this VM.
 
 ## Display policy on official Omarchy
 
-Login and config reload retain this VM's known-good `Virtual-1` mode:
-**3840×2160 at 60 Hz, scale 2**. The guest advertises 1280×800 as preferred,
-so blindly selecting `preferred` would lose Retina resolution. GTK uses
-`GDK_SCALE=1` as in the personal setup; already running GTK applications need
-restarting to inherit it.
+Experimental policy on `experiment/stable-vm-display`:
 
-`vm-display-scale` reads actual Hyprland outputs and scales only `Virtual-*`
-outputs: 1× below 1800 pixels high and 2× at/above it. Odd physical dimensions
-fall back to 1× to avoid an invalid integer-scale configuration. It preserves
-the output's current resolution, refresh rate, position, and transform.
-Hyprland startup, reload, and layout-change events start the helper; a user
-timer checks every five seconds to catch changes arriving during an active
-service run. Already correct outputs are a no-op.
+- Cold startup (no outputs yet) requests **3840×2160 at 60 Hz, scale 2**.
+  Configuration reloads preserve the live virtual display resolution, layout,
+  and scale instead of resetting a UTM-selected mode to 4K.
+- UTM/official guest components remain responsible for fullscreen/windowed
+  resizing and host sleep/wake. There is no custom host-resolution bridge.
+- `vm-display-scale` waits for three matching samples over one second before
+  applying a change. If resizing continues for five seconds, it defers to the
+  next event or timer tick. Sleeping/disabled/zero-sized outputs are ignored.
+- Scale switches to 2× at **1900 pixels high or above**, to 1× at **1600 or
+  below**, and stays unchanged between those thresholds. Odd dimensions also
+  retain their scale until an even mode arrives. This avoids a 2×/1× jump on
+  each odd pixel during window resizing; it does not identify physical Retina
+  density. Stable odd-sized windows can therefore retain the previous scale.
+- Immediately before applying, compositor-side guards reject a stale sampled
+  size/scale. The rule uses the compositor's live mode, position, and transform.
+- Hyprland startup, reload, and layout events start the helper. A timer checks
+  every 15 seconds (one-second timer accuracy); already-correct outputs are a
+  no-op. Only attempted scale changes or failures are logged by the helper.
+- GTK uses `GDK_SCALE=1`; existing GTK applications need restarting to inherit it.
 
-This uses the official Hyprland CLI and user services. It does not install the
-former `omarchy-spice-guest-tools`, rely on its `display.state`, or provision
-its host-resolution/layout bridge. Automatic host-driven resolution changes
-therefore depend on the official guest stack; this helper applies scaling to
-whatever resolution the guest actually receives. A config reload restores the
-known-good 4K mode. Manual host resize/sleep/wake testing remains useful.
+Inspect actual scaling changes while testing:
+
+```bash
+journalctl --user -u vm-display-scale.service -f -o cat
+~/.local/bin/vm-display-scale --dry-run
+```
+
+Try fullscreen → windowed → fullscreen, moving UTM between Retina and non-Retina
+screens, and host lid close/open. Note the timestamp of any blink. The helper
+cannot fix host/guest transport failures or determine the host display density.
+
+To return to the previous policy from a clean experimental checkout:
+
+```bash
+cd ~/dotfiles
+git switch main
+systemctl --user daemon-reload
+hyprctl reload
+hyprctl configerrors
+systemctl --user restart vm-display-scale.timer
+```
 
 ## Temporarily test stock display behavior
 
@@ -119,8 +142,8 @@ cd ~/dotfiles
 ```
 
 Bootstrap backs up the temporary stock monitor file and reinstates the tracked
-symlink, 4K startup mode, event handlers, timer, and `GDK_SCALE=1`. It also
-reapplies the other documented settings. `scripts/validate` intentionally fails
+symlink, branch-specific display policy, event handlers, timer, and
+`GDK_SCALE=1`. It also reapplies the other documented settings. `scripts/validate` intentionally fails
 while stock-display testing is active because the monitor file is temporarily
 outside Stow and the scaling timer is disabled.
 

@@ -6,3 +6,4 @@ StartLimitIntervalSec=0
 [Service]
 Type=oneshot
 ExecStart=%h/.local/bin/vm-display-scale
+TimeoutStartSec=20s

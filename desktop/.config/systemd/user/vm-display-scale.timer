@@ -4,7 +4,8 @@ PartOf=graphical-session.target
 
 [Timer]
 OnActiveSec=2s
-OnUnitInactiveSec=5s
+OnUnitInactiveSec=15s
+AccuracySec=1s
 Unit=vm-display-scale.service
 
 [Install]

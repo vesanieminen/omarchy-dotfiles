@@ -68,3 +68,40 @@ installation, verification, package snapshot, and Git publication commands as
 a comment block in bootstrap itself. This preserves the command record without
 making future installations recreate branches, commit, or push automatically.
 No deployed configuration or provisioning behavior changed.
+
+
+## 2026-10-28 — experimental stable VM display policy
+
+Branch: `experiment/stable-vm-display`; main remains unchanged.
+
+Configuration reloads preserve the active virtual mode instead of requesting
+4K again. The 4K request remains a cold-start fallback. Scaling waits for one
+second of stable geometry, switches up at 1900 pixels high and down at 1600,
+and holds its value for odd dimensions or between thresholds. Sleeping and
+unavailable displays are skipped. Compositor-side guards reject stale sampled
+sizes and read the live mode/layout immediately before applying the new scale.
+The fallback timer runs every 15 seconds with one-second accuracy. Scale
+requests and observed results are recorded in the service journal.
+
+Verification:
+
+- All 15 Python/Lua regression tests pass, including simulated continuous
+  resizing, fullscreen/windowed transitions, resume, cold start, reload, and
+  stale-update rejection.
+- Live tests passed: 1920×1080 switches from 2× to 1×; 3840×2160 switches from
+  1× to 2×; reload preserves both modes. Original 3840×2160@60/2× restored.
+- Live idle observation showed unchanged 4K geometry; service journal contains
+  only the two expected scale requests from the controlled transitions.
+- Hyprland configerrors is empty; systemd unit verification passes; both
+  custom timers remain enabled and active and both services report success.
+- Full `scripts/validate` stops on a pre-existing unrelated difference:
+  `~/.config/foot/foot.ini` is a regular file with font size 9 rather than the
+  tracked symlink (font size 11). It was left untouched. All other tracked
+  deployment links were checked and match the checkout.
+- `git diff --check` passes. Physical host display moves, lid close/open, and
+  actual UTM fullscreen/window transitions remain for user testing.
+
+Pre-change display files were copied to
+`~/.local/state/dotfiles/backups/stable-vm-display-20261028/`.
+Rollback instructions and journal commands are in README.md. No reboot,
+logout, host configuration change, or merge to main was performed.
