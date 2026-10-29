@@ -16,6 +16,7 @@ VM. The Mac runs macOS and UTM; Omarchy runs inside UTM.
 - Finnish Mac keyboard layout, natural scrolling, and mouse adjustments.
 - Lupine theme during the day and Vaadin at night, based on Helsinki daylight.
 - A themed Foot terminal and optional GitHub and Claude authentication helpers.
+- Codex colors that follow light/dark terminal theme changes.
 
 These are personal preferences. Installing also removes the Linux web-app
 launchers for Basecamp, Google Contacts, Google Maps, Google Messages,
@@ -72,6 +73,14 @@ If it reports a file that is no longer linked, that setting may have been
 changed locally.
 
 ## More details
+
+The Codex launcher uses the Mise-managed installation with `FORCE_COLOR=1`
+and `tui.theme="ansi"`. This keeps syntax, diff, and status colors on the
+terminal's 16-color theme palette and avoids cached RGB backgrounds after
+day/night theme changes. It reduces the available color range from truecolor.
+Restart existing Codex sessions to apply it; run `hash -r` in an existing Bash
+shell before starting `codex resume`. Personal Codex configuration and
+credentials are not stored in this repository.
 
 - [Setup commands and checks](docs/commands.md)
 - [Display settings, logs, and rollback](docs/display.md)

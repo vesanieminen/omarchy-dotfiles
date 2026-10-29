@@ -1,0 +1,4 @@
+#!/bin/bash
+# Follow the live terminal palette instead of caching RGB backgrounds.
+codex_binary=$(mise which codex) || exit
+exec env FORCE_COLOR=1 "$codex_binary" --config 'tui.theme="ansi"' "$@"
