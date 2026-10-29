@@ -1,4 +1,5 @@
 # Dependencies from the existing official Omarchy / Arch Linux ARM repositories.
+chromium
 foot
 git
 libsecret

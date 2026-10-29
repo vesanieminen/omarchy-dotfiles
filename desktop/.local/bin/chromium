@@ -1,0 +1,5 @@
+#!/bin/sh
+# Chromium-only software GL fallback for UTM; leaves the desktop GPU untouched.
+export LIBGL_ALWAYS_SOFTWARE=1
+export GALLIUM_DRIVER=llvmpipe
+exec /usr/bin/chromium "$@"

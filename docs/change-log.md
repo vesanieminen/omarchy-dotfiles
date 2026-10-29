@@ -180,3 +180,16 @@ identify the tested configuration and retain rollback to pre-change commit
 errors; SPICE adapter is active and both display services report success.
 The pre-existing Foot deployment-link difference remains unchanged. Full
 repository validation therefore still has that unrelated limitation.
+
+### 2026-10-29: Chromium follows desktop scaling
+
+Tracked the Chromium launcher and flags used by the live VM. Removed the
+global `--force-device-scale-factor=2` override and selected native Wayland
+instead of XWayland so browser scaling follows the guest output. Software
+rendering avoids the VM's unsupported GL context; accelerated video decoding
+and GPU compositing remain disabled. The desktop text-size preference is
+preserved. Chromium is now an explicit bootstrap dependency.
+
+Verified a separate profile launched through the wrapper uses native Wayland,
+has no forced scale factor, and renders successfully on the external display.
+The running personal browser needs `chrome://restart` to pick up new flags.
