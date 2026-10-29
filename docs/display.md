@@ -34,6 +34,24 @@ Validated on 2026-10-28 with fullscreen/windowed transitions, Retina and
   no-op. Only attempted scale changes or failures are logged by the helper.
 - GTK uses `GDK_SCALE=1`; existing GTK applications need restarting to inherit it.
 
+## Chromium scaling
+
+`desktop/.config/chromium-flags.conf` selects native Wayland without a forced
+device scale factor. Chromium follows the guest output's scale as the VM moves
+between host displays, including the existing resolution-based Retina policy
+above. The desktop's text-size preference still applies independently.
+
+The `chromium` launcher in `desktop/.local/bin/` selects Mesa software rendering;
+the flags disable GPU rendering and accelerated video decoding because the
+current UTM graphics backend cannot create Chromium's required GL context.
+This trades graphics performance for compatibility. Both files are installed
+by bootstrap through Stow, and Chromium is included in the required packages.
+
+After changing flags, open `chrome://restart` to restart the existing browser.
+Opening another window alone keeps the old process and its scaling flags.
+
+## Display diagnostics
+
 Inspect actual resolution and scaling changes:
 
 ```bash

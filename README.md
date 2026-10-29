@@ -13,6 +13,8 @@ VM. The Mac runs macOS and UTM; Omarchy runs inside UTM.
 - Automatic display resizing when switching between fullscreen and windowed
   mode, with scaling for Retina and lower-resolution displays.
 - Text clipboard sharing between macOS and Linux.
+- Chromium that follows desktop scaling on Retina and external displays, using
+  software rendering for compatibility with the VM graphics driver.
 - Finnish Mac keyboard layout, natural scrolling, and mouse adjustments.
 - Lupine theme during the day and Vaadin at night, based on Helsinki daylight.
 - A themed Foot terminal and optional GitHub and Claude authentication helpers.
