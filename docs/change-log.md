@@ -1,5 +1,14 @@
 # Migration log
 
+## 2026-10-29 — Codex colors across theme changes
+
+Added a Stow-managed Codex launcher that resolves the current installation
+through Mise and starts it with `FORCE_COLOR=1` and `tui.theme="ansi"`.
+Codex uses the terminal's 16-color palette for colored rendering instead of
+retaining RGB backgrounds from the theme active at startup. Bootstrap deploys
+the launcher through the existing backup and Stow workflow. Personal Codex
+configuration stays outside the repository.
+
 ## 2026-10-27 — official Omarchy Linux VM
 
 The user designated this freshly installed official Omarchy VM as the
