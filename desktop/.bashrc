@@ -29,6 +29,11 @@ source "$OMARCHY_PATH/default/bash/rc"
 prefer_local_bin
 unset -f prefer_local_bin
 
+# Mise rewrites PATH on directory changes; keep Codex on the color-safe launcher.
+codex() {
+  "$HOME/.local/bin/codex" "$@"
+}
+
 # Add your own exports, aliases, and functions here.
 #
 # Make an alias for invoking commands you use constantly

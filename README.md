@@ -80,8 +80,10 @@ The Codex launcher uses the Mise-managed installation with `FORCE_COLOR=1`
 and `tui.theme="ansi"`. This keeps syntax, diff, and status colors on the
 terminal's 16-color theme palette and avoids cached RGB backgrounds after
 day/night theme changes. It reduces the available color range from truecolor.
-Restart existing Codex sessions to apply it; run `hash -r` in an existing Bash
-shell before starting `codex resume`. Personal Codex configuration and
+Bash routes `codex` through this launcher even when Mise rewrites `PATH`
+after entering a project directory.
+Restart existing Codex sessions to apply it; run `source ~/.bashrc` in an existing
+Bash shell before starting `codex resume`. Personal Codex configuration and
 credentials are not stored in this repository.
 
 - [Setup commands and checks](docs/commands.md)
