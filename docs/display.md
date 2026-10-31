@@ -4,9 +4,12 @@ The display policy follows UTM resize requests through SPICE and Hyprland.
 Validated on 2026-10-28 with fullscreen/windowed transitions, Retina and
 2560×1440 external displays, and host sleep/wake.
 
-- Cold startup (no outputs yet) requests **3840×2160 at 60 Hz, scale 2**.
+- Cold startup (no outputs yet) requests **3456×2160 at 60 Hz, scale 2**.
+  This matches the fullscreen area UTM previously requested on this 16-inch
+  M3 Max MacBook Pro below the notch. The old 3840×2160 fallback had a wider
+  aspect ratio and could leave unused space when no host resize arrived.
   Configuration reloads preserve the live virtual display resolution, layout,
-  and scale instead of resetting a UTM-selected mode to 4K.
+  and scale instead of resetting a UTM-selected mode to the laptop fallback.
 - `vm-spice-display-agent` receives UTM monitor requests from the packaged
   SPICE daemon and applies them through Hyprland. The packaged session agent
   handles other traffic through a private Unix socket. A user service drop-in
@@ -33,6 +36,20 @@ Validated on 2026-10-28 with fullscreen/windowed transitions, Retina and
   every 15 seconds (one-second timer accuracy); already-correct outputs are a
   no-op. Only attempted scale changes or failures are logged by the helper.
 - GTK uses `GDK_SCALE=1`; existing GTK applications need restarting to inherit it.
+
+If an existing session is stuck at the old 3840×2160 fallback on the laptop,
+apply the previously measured fullscreen size once:
+
+```bash
+hyprctl eval 'hl.monitor({ output = "Virtual-1", mode = "3456x2160@60", position = "0x0", scale = 2 })'
+hyprctl reload
+hyprctl configerrors
+```
+
+This is a laptop fullscreen correction. UTM Auto Resolution must still be
+enabled for subsequent host window and display changes. Reloading or rerunning
+bootstrap intentionally preserves the live size; it cannot discover the host
+window dimensions without a SPICE request.
 
 ## Chromium scaling
 

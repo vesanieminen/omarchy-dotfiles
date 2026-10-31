@@ -2,11 +2,12 @@
 hl.env("GDK_SCALE", "1")
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = 1 })
 
--- Preserve live virtual modes on reload. Request 4K only during cold startup,
--- when no outputs exist yet; never force 4K over a host-driven resize.
+-- Preserve live virtual modes on reload. On cold startup, fall back to the
+-- 16-inch MacBook Pro fullscreen area previously requested by UTM (below the
+-- notch). Host-driven resizes override this for windows and external displays.
 local monitors = hl.get_monitors()
 if #monitors == 0 then
-  hl.monitor({ output = "Virtual-1", mode = "3840x2160@60", position = "0x0", scale = 2 })
+  hl.monitor({ output = "Virtual-1", mode = "3456x2160@60", position = "0x0", scale = 2 })
 else
   for _, m in ipairs(monitors) do
     if m.name:match("^Virtual%-") and m.width > 0 and m.height > 0 then

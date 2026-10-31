@@ -108,8 +108,8 @@ hl = { get_monitor = function() return {width=1920,height=1080,scale=1,dpms_stat
                  "monitor=function(spec) table.insert(specs,spec) end}\n" +
                  "dofile(" + repr(str(path)) + ")\n" + assertions)
 
-    def test_cold_start_has_4k_fallback(self):
-        self.config("{}", 'assert(#specs == 2 and specs[2].mode == "3840x2160@60")')
+    def test_cold_start_fits_macbook_utm_fullscreen(self):
+        self.config("{}", 'assert(#specs == 2 and specs[2].mode == "3456x2160@60" and specs[2].scale == 2)')
 
     def test_reload_keeps_windowed_mode(self):
         self.config('{ {name="Virtual-1",width=1920,height=1080,refresh_rate=60,'
