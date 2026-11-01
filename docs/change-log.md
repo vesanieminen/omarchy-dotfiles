@@ -1,5 +1,15 @@
 # Migration log
 
+## 2026-11-01 — UTM black desktop after updating Hyprland
+
+Added a Stow-managed `hypr/looknfeel.lua` that sets
+`quirks.skip_non_kms_dmabuf_formats = false`. Hyprland 0.57 enables this quirk
+by default, which can remove alpha-capable buffer formats on the UTM virtio
+GPU. The shell's transparent surfaces then render opaque black over the
+desktop. The override restored the desktop after the update on this VM.
+See [Omarchy issue #17061](https://github.com/omacom/omarchy/issues/17061).
+Bootstrap backs up an existing appearance configuration before linking it.
+
 ## 2026-10-29 — Codex colors across theme changes
 
 Added a Stow-managed Codex launcher that resolves the current installation
