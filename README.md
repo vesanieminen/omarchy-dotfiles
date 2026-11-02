@@ -76,6 +76,10 @@ changed locally.
 
 ## More details
 
+Foot reads its theme from `~/.config/foot/theme.ini`. Bootstrap initializes this
+file, and a `theme-set` hook updates it atomically after theme changes. This
+keeps the include available while Omarchy replaces its current theme directory.
+
 The Codex launcher uses the Mise-managed installation with `FORCE_COLOR=1`
 and `tui.theme="ansi"`. This keeps syntax, diff, and status colors on the
 terminal's 16-color theme palette and avoids cached RGB backgrounds after

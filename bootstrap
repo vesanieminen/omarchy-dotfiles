@@ -96,6 +96,8 @@ while IFS= read -r -d '' tracked; do
 done < <(find "$repo_dir/desktop" -type f -print0)
 
 stow --dir="$repo_dir" --target="$HOME" --no-folding --restow desktop
+# Seed Foot's persistent include before a terminal can read the new config.
+bash "$repo_dir/desktop/.config/omarchy/hooks/theme-set.d/20-foot-persistent-theme"
 systemctl --user daemon-reload
 # Apply the native display adapter to an already-running packaged SPICE agent.
 systemctl --user try-restart spice-vdagent.service
