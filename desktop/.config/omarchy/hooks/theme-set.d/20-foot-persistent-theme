@@ -1,0 +1,17 @@
+#!/bin/bash
+set -euo pipefail
+
+# Foot may start while Omarchy replaces current/theme. Keep an independent,
+# atomically updated copy so its required include is always available.
+exec 9>"${XDG_RUNTIME_DIR:-/tmp}/omarchy-theme-set.lock"
+flock -s 9
+
+source_theme="$HOME/.local/state/omarchy/current/theme/foot.ini"
+[[ -r "$source_theme" ]] || exit 0
+theme_dir="$HOME/.config/foot"
+mkdir -p "$theme_dir"
+temporary_theme=$(mktemp "$theme_dir/.theme.ini.XXXXXX")
+trap 'rm -f -- "$temporary_theme"' EXIT
+cp -- "$source_theme" "$temporary_theme"
+chmod 644 "$temporary_theme"
+mv -f -- "$temporary_theme" "$theme_dir/theme.ini"
